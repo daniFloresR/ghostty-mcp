@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Tests
+        run: cargo test --verbose
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t ghostty-mcp:ci .
+
+      - name: Check image size < 10MB
+        run: |
+          SIZE=$(docker image inspect ghostty-mcp:ci --format='{{.Size}}')
+          echo "Image size: $((SIZE / 1024 / 1024))MB ($SIZE bytes)"
+          if [ "$SIZE" -gt 10485760 ]; then
+            echo "ERROR: Image exceeds 10MB limit"
+            exit 1
+          fi
