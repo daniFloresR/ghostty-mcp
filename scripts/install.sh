@@ -39,14 +39,44 @@ if ! command -v claude &>/dev/null; then
     exit 1
 fi
 
-# Pull image
+# Pull image (blocking — guarantees image exists on first run)
 echo "Pulling $IMAGE..."
 docker pull "$IMAGE"
 
-# Register with Claude Code
+# Generate wrapper script for auto-updates
+WRAPPER="$HOME/.local/bin/ghostty-mcp"
+echo "Installing wrapper script at $WRAPPER..."
+mkdir -p "$HOME/.local/bin"
+cat > "$WRAPPER" << 'WRAPPER_EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+IMAGE="ghcr.io/danifloresr/ghostty-mcp:latest"
+
+# Detect Ghostty config directory
+if [ -n "${GHOSTTY_CONFIG_PATH:-}" ]; then
+    CONFIG_DIR="$(dirname "$GHOSTTY_CONFIG_PATH")"
+elif [ -f "$HOME/Library/Application Support/com.mitchellh.ghostty/config" ]; then
+    CONFIG_DIR="$HOME/Library/Application Support/com.mitchellh.ghostty"
+elif [ -n "${XDG_CONFIG_HOME:-}" ] && [ -d "$XDG_CONFIG_HOME/ghostty" ]; then
+    CONFIG_DIR="$XDG_CONFIG_HOME/ghostty"
+elif [ -d "$HOME/.config/ghostty" ]; then
+    CONFIG_DIR="$HOME/.config/ghostty"
+else
+    CONFIG_DIR="$HOME/.config/ghostty"
+fi
+
+# Pull latest in background (updates image for next session)
+docker pull "$IMAGE" &>/dev/null &
+
+# Run with current cached image
+exec docker run -i --rm -v "$CONFIG_DIR:/config/ghostty" "$IMAGE"
+WRAPPER_EOF
+chmod +x "$WRAPPER"
+
+# Register with Claude Code (points to wrapper, not direct docker run)
 echo "Registering MCP server..."
-claude mcp add ghostty-mcp --scope user -- \
-    docker run -i --rm -v "$CONFIG_DIR:/config/ghostty" "$IMAGE"
+claude mcp add ghostty-mcp --scope user -- "$WRAPPER"
 
 echo ""
 echo "Done! Start a new Claude Code session and try:"

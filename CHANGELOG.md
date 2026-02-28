@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-02-27
+
+### Added
+- Auto-update wrapper script for Docker installations (background pull on each startup).
+
 ## [0.2.2] - 2026-02-27
 
 ### Fixed
