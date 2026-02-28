@@ -492,6 +492,59 @@ impl GhosttyServer {
     }
 }
 
+impl GhosttyServer {
+    fn build_instructions(&self) -> String {
+        // Count options per category
+        let mut counts: std::collections::HashMap<&str, usize> =
+            std::collections::HashMap::new();
+        for opt in &self.options {
+            *counts.entry(&opt.category).or_insert(0) += 1;
+        }
+
+        // Sort categories by count descending
+        let mut sorted_cats: Vec<(&&str, &usize)> = counts.iter().collect();
+        sorted_cats.sort_by(|a, b| b.1.cmp(a.1));
+
+        let category_summary: String = sorted_cats
+            .iter()
+            .map(|(name, count)| format!("{} ({})", name, count))
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        format!(
+            "Ghostty terminal configuration assistant with {} options across {} categories.\n\
+            \n\
+            WORKFLOW PATTERNS\n\
+            - Discovery: list_categories -> search_config(category=X) -> get_option(name) for full docs\n\
+            - Modify: search_config -> get_option (verify type/default) -> write_config -> validate_config\n\
+            - Audit: read_config -> validate_config -> fix issues with write_config\n\
+            - Remove: read_config(option=X) to check current value -> remove_config to comment it out\n\
+            \n\
+            SEARCH TIPS\n\
+            search_config supports conceptual/natural-language queries, not just exact names.\n\
+            - Concepts work: \"transparent\", \"font size\", \"padding\", \"blur\", \"tab style\"\n\
+            - Synonym matching is built in (e.g. \"transparent\" finds background-opacity, \"hotkey\" finds keybind)\n\
+            - Use the category parameter to narrow results when browsing a topic area\n\
+            - get_option returns the full description, type, valid values, and related options\n\
+            \n\
+            CATEGORIES\n\
+            {}\n\
+            \n\
+            VALIDATION\n\
+            - write_config validates automatically before writing and rejects invalid values\n\
+            - validate_config without parameters checks the entire config file for errors\n\
+            - validate_config with option + value checks a single value before setting it\n\
+            - Types: string, boolean, positive integer, float, color (hex like #RRGGBB or named), enum (from fixed set)\n\
+            \n\
+            CONFIG RELOAD\n\
+            After write_config or remove_config, remind the user to reload: Cmd+Shift+, on macOS, or restart Ghostty.",
+            self.options.len(),
+            counts.len(),
+            category_summary,
+        )
+    }
+}
+
 #[tool_handler]
 impl ServerHandler for GhosttyServer {
     fn get_info(&self) -> ServerInfo {
@@ -499,14 +552,7 @@ impl ServerHandler for GhosttyServer {
             protocol_version: ProtocolVersion::V_2024_11_05,
             capabilities: ServerCapabilities::builder().enable_tools().build(),
             server_info: Implementation::from_build_env(),
-            instructions: Some(
-                "Ghostty terminal configuration assistant. \
-                Search through ~180 configuration options with fuzzy matching, \
-                read and modify the Ghostty config file, and validate settings. \
-                Start with search_config to find options, get_option for full docs, \
-                and write_config to apply changes."
-                    .into(),
-            ),
+            instructions: Some(self.build_instructions()),
         }
     }
 }
@@ -551,5 +597,44 @@ mod tests {
         let server = GhosttyServer::new();
         assert!(!server.options.is_empty());
         assert!(!server.config_path.is_empty());
+    }
+
+    #[test]
+    fn build_instructions_contains_dynamic_content() {
+        let server = GhosttyServer::new();
+        let instructions = server.build_instructions();
+
+        // Should contain the actual option count, not a hardcoded approximation
+        let count_str = format!("{} options", server.options.len());
+        assert!(
+            instructions.contains(&count_str),
+            "Instructions should contain exact option count '{}', got:\n{}",
+            count_str,
+            instructions
+        );
+
+        // Should contain workflow patterns
+        assert!(instructions.contains("WORKFLOW PATTERNS"));
+        assert!(instructions.contains("list_categories"));
+        assert!(instructions.contains("search_config"));
+        assert!(instructions.contains("get_option"));
+        assert!(instructions.contains("write_config"));
+        assert!(instructions.contains("validate_config"));
+        assert!(instructions.contains("remove_config"));
+
+        // Should contain search tips
+        assert!(instructions.contains("SEARCH TIPS"));
+        assert!(instructions.contains("transparent"));
+
+        // Should contain category summary with actual categories from loaded options
+        assert!(instructions.contains("CATEGORIES"));
+        assert!(instructions.contains("font"));
+        assert!(instructions.contains("window"));
+
+        // Should contain validation info
+        assert!(instructions.contains("VALIDATION"));
+
+        // Should contain reload note
+        assert!(instructions.contains("CONFIG RELOAD"));
     }
 }

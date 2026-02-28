@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-02-27
+
+### Added
+- Dynamic MCP instructions generated at runtime with workflow patterns, search tips, category summary, and validation guidance.
+
 ## [0.3.0] - 2026-02-27
 
 ### Added
