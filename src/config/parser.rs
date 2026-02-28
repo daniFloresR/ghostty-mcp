@@ -59,6 +59,17 @@ impl ConfigFile {
         map
     }
 
+    /// Get all values for a specific option. Useful for repeatable options like keybind.
+    pub fn get_all(&self, option: &str) -> Vec<String> {
+        self.lines
+            .iter()
+            .filter_map(|line| match line {
+                ConfigLine::KeyValue { key, value } if key == option => Some(value.clone()),
+                _ => None,
+            })
+            .collect()
+    }
+
     /// Get the value of a specific option. Returns the last set value.
     pub fn get(&self, option: &str) -> Option<String> {
         self.lines
@@ -171,6 +182,23 @@ mod tests {
         let input = "# Comment\n\nfont-size = 14\ntheme = dark\n";
         let config = ConfigFile::parse(input, "/test");
         assert_eq!(config.to_string(), input);
+    }
+
+    #[test]
+    fn get_all_returns_all_values() {
+        let config =
+            ConfigFile::parse("keybind = ctrl+a=new_tab\nkeybind = ctrl+b=new_window\n", "/test");
+        let all = config.get_all("keybind");
+        assert_eq!(all.len(), 2);
+        assert_eq!(all[0], "ctrl+a=new_tab");
+        assert_eq!(all[1], "ctrl+b=new_window");
+    }
+
+    #[test]
+    fn get_all_empty_for_missing_key() {
+        let config = ConfigFile::parse("font-size = 14\n", "/test");
+        let all = config.get_all("keybind");
+        assert!(all.is_empty());
     }
 
     #[test]

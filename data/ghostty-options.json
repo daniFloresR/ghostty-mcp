@@ -984,7 +984,7 @@
     "category": "color",
     "platform": null,
     "reloadable": true,
-    "repeatable": false,
+    "repeatable": true,
     "search_terms": [
       "palette"
     ],
@@ -1584,7 +1584,7 @@
       "macos"
     ],
     "reloadable": true,
-    "repeatable": false,
+    "repeatable": true,
     "search_terms": [
       "binding",
       "hotkey",
@@ -2761,7 +2761,7 @@
     "category": "shader",
     "platform": null,
     "reloadable": true,
-    "repeatable": false,
+    "repeatable": true,
     "search_terms": [
       "animation",
       "custom",

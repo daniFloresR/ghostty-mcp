@@ -29,6 +29,14 @@ jobs:
           echo "image=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
           echo "Releasing $VERSION"
 
+      - name: Check tag does not already exist
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          if git rev-parse "$TAG" &>/dev/null; then
+            echo "::error::Tag $TAG already exists. Skipping duplicate release."
+            exit 1
+          fi
+
       - name: Extract changelog entry
         id: changelog
         run: |

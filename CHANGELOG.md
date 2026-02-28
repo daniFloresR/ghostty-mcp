@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-02-28
+
+### Added
+- Repeatable option support for `write_config`: appends new entries for keybind, palette, and other repeatable options instead of overwriting.
+- Per-value removal for `remove_config`: optional `value` parameter to comment out a specific entry from repeatable options.
+- `read_config` now shows all values as a list for repeatable options.
+- `get_all()` method on `ConfigFile` for retrieving all values of a key.
+- `append_option()` in writer for grouped insertion after last occurrence of a key.
+- `comment_option_value()` in writer for surgical single-value removal.
+
+### Fixed
+- `keybind`, `palette`, `custom-shader`, and `custom-shader-animation` now correctly marked as `repeatable: true` in generated option data.
+- Parser heuristic supplemented with explicit override set for repeatable detection.
+
 ## [0.4.0] - 2026-02-27
 
 ### Added
