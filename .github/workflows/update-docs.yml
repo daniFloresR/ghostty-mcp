@@ -1,0 +1,172 @@
+name: Update Ghostty Docs
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # Daily at 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force update even if version unchanged'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-docs:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read current version
+        id: current
+        run: |
+          VERSION=$(cat data/ghostty-version.txt | tr -d '[:space:]')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Current tracked version: $VERSION"
+
+      - name: Get latest version from brew
+        id: latest
+        run: |
+          VERSION=$(brew info --cask ghostty 2>/dev/null | head -1 | awk '{print $2}')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Latest brew version: $VERSION"
+
+      - name: Check if update needed
+        id: check
+        run: |
+          CURRENT="${{ steps.current.outputs.version }}"
+          LATEST="${{ steps.latest.outputs.version }}"
+          FORCE="${{ inputs.force }}"
+
+          if [ "$CURRENT" = "$LATEST" ] && [ "$FORCE" != "true" ]; then
+            echo "Version $CURRENT is already up to date"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Update available: $CURRENT -> $LATEST"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check for existing PR
+        if: steps.check.outputs.skip == 'false'
+        id: pr_check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST="${{ steps.latest.outputs.version }}"
+          BRANCH="auto/update-ghostty-docs-v${LATEST}"
+          EXISTING=$(gh pr list --head "$BRANCH" --state open --json number --jq 'length')
+          if [ "$EXISTING" -gt 0 ]; then
+            echo "PR already exists for $BRANCH"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Ghostty
+        if: steps.check.outputs.skip == 'false' && steps.pr_check.outputs.skip == 'false'
+        run: |
+          echo "Installing Ghostty..."
+          brew install --cask ghostty
+          echo "Installed: $(/Applications/Ghostty.app/Contents/MacOS/ghostty --version)"
+
+      - name: Extract raw docs
+        if: steps.check.outputs.skip == 'false' && steps.pr_check.outputs.skip == 'false'
+        run: |
+          /Applications/Ghostty.app/Contents/MacOS/ghostty +show-config --default --docs > data/ghostty-docs-raw.txt 2>/dev/null
+          LINES=$(wc -l < data/ghostty-docs-raw.txt | tr -d ' ')
+          echo "Raw docs: $LINES lines"
+          if [ "$LINES" -lt 1000 ]; then
+            echo "ERROR: Raw docs too short ($LINES lines), expected >= 1000"
+            exit 1
+          fi
+
+      - name: Parse docs
+        if: steps.check.outputs.skip == 'false' && steps.pr_check.outputs.skip == 'false'
+        run: |
+          python3 scripts/parse_docs.py data/ghostty-docs-raw.txt data/ghostty-options.json
+          COUNT=$(python3 -c "import json; print(len(json.load(open('data/ghostty-options.json'))))")
+          echo "Parsed $COUNT options"
+          if [ "$COUNT" -lt 150 ]; then
+            echo "ERROR: Too few options ($COUNT), expected >= 150"
+            exit 1
+          fi
+
+      - name: Update version file
+        if: steps.check.outputs.skip == 'false' && steps.pr_check.outputs.skip == 'false'
+        run: |
+          echo "${{ steps.latest.outputs.version }}" > data/ghostty-version.txt
+
+      - name: Build and test
+        if: steps.check.outputs.skip == 'false' && steps.pr_check.outputs.skip == 'false'
+        run: |
+          rustup toolchain install stable --profile minimal --component clippy
+          cargo clippy --all-targets -- -D warnings
+          cargo test --verbose
+
+      - name: Generate diff summary
+        if: steps.check.outputs.skip == 'false' && steps.pr_check.outputs.skip == 'false'
+        id: diff
+        run: |
+          CURRENT="${{ steps.current.outputs.version }}"
+          LATEST="${{ steps.latest.outputs.version }}"
+
+          # Extract option names from old and new JSON
+          git show HEAD:data/ghostty-options.json | python3 -c "import json,sys; [print(o['name']) for o in json.load(sys.stdin)]" | sort > /tmp/old_options.txt
+          python3 -c "import json; [print(o['name']) for o in json.load(open('data/ghostty-options.json'))]" | sort > /tmp/new_options.txt
+
+          ADDED=$(comm -13 /tmp/old_options.txt /tmp/new_options.txt)
+          REMOVED=$(comm -23 /tmp/old_options.txt /tmp/new_options.txt)
+          NEW_COUNT=$(python3 -c "import json; print(len(json.load(open('data/ghostty-options.json'))))")
+          OLD_COUNT=$(git show HEAD:data/ghostty-options.json | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
+
+          {
+            echo "summary<<EOF"
+            echo "**Version**: $CURRENT → $LATEST"
+            echo "**Options**: $OLD_COUNT → $NEW_COUNT"
+            echo ""
+            if [ -n "$ADDED" ]; then
+              echo "### New options"
+              echo "$ADDED" | while read -r opt; do echo "- \`$opt\`"; done
+              echo ""
+            fi
+            if [ -n "$REMOVED" ]; then
+              echo "### Removed options"
+              echo "$REMOVED" | while read -r opt; do echo "- \`$opt\`"; done
+              echo ""
+            fi
+            if [ -z "$ADDED" ] && [ -z "$REMOVED" ]; then
+              echo "_No options added or removed (descriptions/defaults may have changed)._"
+              echo ""
+            fi
+            echo "### Verification"
+            echo "- [x] Raw docs >= 1000 lines"
+            echo "- [x] Parsed >= 150 options"
+            echo "- [x] cargo clippy passes"
+            echo "- [x] cargo test passes"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create PR
+        if: steps.check.outputs.skip == 'false' && steps.pr_check.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST="${{ steps.latest.outputs.version }}"
+          BRANCH="auto/update-ghostty-docs-v${LATEST}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add data/ghostty-options.json data/ghostty-docs-raw.txt data/ghostty-version.txt
+          git commit -m "chore: update ghostty docs to v${LATEST}"
+          git push origin "$BRANCH"
+
+          gh label create automated --description "Automated PR" --color "0E8A16" 2>/dev/null || true
+          gh pr create \
+            --title "Update Ghostty docs to v${LATEST}" \
+            --body "${{ steps.diff.outputs.summary }}" \
+            --label "automated"
