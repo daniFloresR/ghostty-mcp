@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-02-27
+
+### Changed
+- Merged auto-tag and Docker publish into a single release workflow.
+- Added GitHub Release creation with changelog notes extracted automatically.
+- Fixed GITHUB_TOKEN cascade limitation that prevented Docker publish on tag.
+
 ## [0.2.0] - 2026-02-27
 
 ### Added
