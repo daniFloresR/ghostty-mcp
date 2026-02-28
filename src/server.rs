@@ -238,14 +238,26 @@ impl GhosttyServer {
 
         match params.option {
             Some(option_name) => {
-                let value = config.get(&option_name);
                 let known = self.options.iter().find(|o| o.name == option_name);
+                let is_repeatable = known.is_some_and(|o| o.repeatable);
 
-                let mut output = format!("# {} — Current Value\n\n", option_name);
+                let mut output = format!("# {} -- Current Value\n\n", option_name);
 
-                match value {
-                    Some(v) => output.push_str(&format!("**Set to:** `{}`\n", v)),
-                    None => output.push_str("**Not set** (using default)\n"),
+                if is_repeatable {
+                    let all = config.get_all(&option_name);
+                    if all.is_empty() {
+                        output.push_str("**Not set** (using default)\n");
+                    } else {
+                        output.push_str(&format!("**{} entries set:**\n", all.len()));
+                        for v in &all {
+                            output.push_str(&format!("- `{}`\n", v));
+                        }
+                    }
+                } else {
+                    match config.get(&option_name) {
+                        Some(v) => output.push_str(&format!("**Set to:** `{}`\n", v)),
+                        None => output.push_str("**Not set** (using default)\n"),
+                    }
                 }
 
                 if let Some(opt) = known {
@@ -288,7 +300,7 @@ impl GhosttyServer {
         }
     }
 
-    #[tool(description = "Set a Ghostty configuration option. Updates the value if it already exists, or appends it. The value is validated against the option's type before writing. Changes take effect on config reload (Cmd+Shift+, on macOS).")]
+    #[tool(description = "Set a Ghostty configuration option. For repeatable options (keybind, palette, etc.), appends a new entry instead of overwriting. For non-repeatable options, updates the existing value or adds it. The value is validated before writing. Changes take effect on config reload (Cmd+Shift+, on macOS).")]
     async fn write_config(
         &self,
         params: Parameters<WriteConfigParams>,
@@ -326,21 +338,38 @@ impl GhosttyServer {
             data: None,
         })?;
 
-        let previous = config.get(&params.option);
-        writer::set_option(&mut config, &params.option, &params.value);
+        let is_repeatable = known.is_some_and(|o| o.repeatable);
+
+        let mut output = if is_repeatable {
+            let appended = writer::append_option(&mut config, &params.option, &params.value);
+            if !appended {
+                return Ok(CallToolResult::error(vec![Content::text(format!(
+                    "Duplicate: `{} = {}` already exists in config.",
+                    params.option, params.value
+                ))]));
+            }
+            let count = config.get_all(&params.option).len();
+            format!(
+                "Appended `{} = {}`\n({} total entries)\n",
+                params.option, params.value, count
+            )
+        } else {
+            let previous = config.get(&params.option);
+            writer::set_option(&mut config, &params.option, &params.value);
+            let mut out = format!("Set `{} = {}`\n", params.option, params.value);
+            if let Some(prev) = previous {
+                out.push_str(&format!("Previous value: `{}`\n", prev));
+            } else {
+                out.push_str("(new option added)\n");
+            }
+            out
+        };
+
         writer::write_config(&config).map_err(|e| McpError {
             code: ErrorCode::INTERNAL_ERROR,
             message: format!("Failed to write config: {}", e).into(),
             data: None,
         })?;
-
-        let mut output = format!("Set `{} = {}`\n", params.option, params.value);
-
-        if let Some(prev) = previous {
-            output.push_str(&format!("Previous value: `{}`\n", prev));
-        } else {
-            output.push_str("(new option added)\n");
-        }
 
         if !warnings.is_empty() {
             output.push_str(&format!(
@@ -358,7 +387,7 @@ impl GhosttyServer {
         Ok(CallToolResult::success(vec![Content::text(output)]))
     }
 
-    #[tool(description = "Remove a Ghostty configuration option by commenting it out. The option will revert to its default value. The line is preserved as a comment for reference.")]
+    #[tool(description = "Remove a Ghostty configuration option by commenting it out. For repeatable options (keybind, palette, etc.), provide 'value' to remove a specific entry; omit 'value' to remove all entries. The line is preserved as a comment for reference.")]
     async fn remove_config(
         &self,
         params: Parameters<RemoveConfigParams>,
@@ -370,23 +399,53 @@ impl GhosttyServer {
             data: None,
         })?;
 
-        let previous = config.get(&params.option);
-
-        if previous.is_none() {
+        let all_values = config.get_all(&params.option);
+        if all_values.is_empty() {
             return Ok(CallToolResult::error(vec![Content::text(format!(
                 "Option '{}' is not set in the config file.",
                 params.option
             ))]));
         }
 
-        let found = writer::comment_option(&mut config, &params.option);
-
-        if !found {
-            return Ok(CallToolResult::error(vec![Content::text(format!(
-                "Option '{}' was not found in config file.",
-                params.option
-            ))]));
-        }
+        let output = if let Some(ref value) = params.value {
+            let found = writer::comment_option_value(&mut config, &params.option, value);
+            if !found {
+                return Ok(CallToolResult::error(vec![Content::text(format!(
+                    "No entry `{} = {}` found in config file.\n\nCurrent values:\n{}",
+                    params.option,
+                    value,
+                    all_values
+                        .iter()
+                        .map(|v| format!("  {} = {}", params.option, v))
+                        .collect::<Vec<_>>()
+                        .join("\n")
+                ))]));
+            }
+            let remaining = config.get_all(&params.option).len();
+            format!(
+                "Removed `{} = {}`\n({} entries remaining)\n",
+                params.option, value, remaining
+            )
+        } else {
+            let count = all_values.len();
+            let found = writer::comment_option(&mut config, &params.option);
+            if !found {
+                return Ok(CallToolResult::error(vec![Content::text(format!(
+                    "Option '{}' was not found in config file.",
+                    params.option
+                ))]));
+            }
+            let mut out = format!("Removed all {} entries for `{}`\n", count, params.option);
+            if let Some(opt) = self.options.iter().find(|o| o.name == params.option) {
+                let default = if opt.default_value.is_empty() {
+                    "(unset)".to_string()
+                } else {
+                    opt.default_value.clone()
+                };
+                out.push_str(&format!("Will revert to default: `{}`\n", default));
+            }
+            out
+        };
 
         writer::write_config(&config).map_err(|e| McpError {
             code: ErrorCode::INTERNAL_ERROR,
@@ -394,20 +453,7 @@ impl GhosttyServer {
             data: None,
         })?;
 
-        let mut output = format!("Removed `{}`\n", params.option);
-        if let Some(prev) = previous {
-            output.push_str(&format!("Previous value: `{}`\n", prev));
-        }
-
-        if let Some(opt) = self.options.iter().find(|o| o.name == params.option) {
-            let default = if opt.default_value.is_empty() {
-                "(unset)".to_string()
-            } else {
-                opt.default_value.clone()
-            };
-            output.push_str(&format!("Will revert to default: `{}`\n", default));
-        }
-
+        let mut output = output;
         output.push_str("\nReload config in Ghostty to apply changes.");
 
         Ok(CallToolResult::success(vec![Content::text(output)]))
@@ -519,6 +565,7 @@ impl GhosttyServer {
             - Modify: search_config -> get_option (verify type/default) -> write_config -> validate_config\n\
             - Audit: read_config -> validate_config -> fix issues with write_config\n\
             - Remove: read_config(option=X) to check current value -> remove_config to comment it out\n\
+            - Remove specific: For repeatable options, use remove_config with 'value' to remove one entry\n\
             \n\
             SEARCH TIPS\n\
             search_config supports conceptual/natural-language queries, not just exact names.\n\

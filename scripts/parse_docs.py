@@ -146,7 +146,14 @@ def main():
             platforms.append('linux')
         return platforms if platforms else None
 
-    def is_repeatable(description):
+    # Options known to be repeatable that the heuristic cannot detect from
+    # description text alone (they use different phrasing like "overwrite"
+    # or "map" instead of "repeat").
+    REPEATABLE_OVERRIDES = {'keybind', 'palette', 'custom-shader', 'custom-shader-animation'}
+
+    def is_repeatable(name, description):
+        if name in REPEATABLE_OVERRIDES:
+            return True
         desc_lower = description.lower()
         return 'repeated' in desc_lower or 'repeatable' in desc_lower or 'can be repeated' in desc_lower
 
@@ -253,7 +260,7 @@ def main():
                 'category': infer_category(name, description),
                 'platform': platform,
                 'reloadable': is_reloadable(description),
-                'repeatable': is_repeatable(description),
+                'repeatable': is_repeatable(name, description),
                 'search_terms': generate_search_terms(name, description),
             }
 

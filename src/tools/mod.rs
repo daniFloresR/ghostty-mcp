@@ -36,6 +36,9 @@ pub struct WriteConfigParams {
 pub struct RemoveConfigParams {
     /// The option name to remove (will be commented out, not deleted)
     pub option: String,
+    /// For repeatable options (keybind, palette, etc.): the specific value to remove.
+    /// If omitted, all entries for the option are removed.
+    pub value: Option<String>,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]

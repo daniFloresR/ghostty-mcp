@@ -51,6 +51,66 @@ pub fn comment_option(config: &mut ConfigFile, key: &str) -> bool {
     found
 }
 
+/// Append a new entry for a repeatable option (e.g. keybind, palette).
+/// Inserts after the last occurrence of the same key to keep entries grouped.
+/// Returns false if an exact duplicate (same key + value) already exists.
+pub fn append_option(config: &mut ConfigFile, key: &str, value: &str) -> bool {
+    // Reject exact duplicates
+    let is_duplicate = config.lines.iter().any(|line| {
+        matches!(line, ConfigLine::KeyValue { key: k, value: v } if k == key && v == value)
+    });
+    if is_duplicate {
+        return false;
+    }
+
+    let new_line = ConfigLine::KeyValue {
+        key: key.to_string(),
+        value: value.to_string(),
+    };
+
+    // Find last occurrence of this key to insert after it
+    let last_idx = config
+        .lines
+        .iter()
+        .enumerate()
+        .rev()
+        .find_map(|(i, line)| match line {
+            ConfigLine::KeyValue { key: k, .. } if k == key => Some(i),
+            _ => None,
+        });
+
+    if let Some(idx) = last_idx {
+        config.lines.insert(idx + 1, new_line);
+    } else {
+        // No existing entry -- append at end with blank separator
+        if !config.lines.is_empty()
+            && !matches!(config.lines.last(), Some(ConfigLine::Empty))
+        {
+            config.lines.push(ConfigLine::Empty);
+        }
+        config.lines.push(new_line);
+    }
+
+    true
+}
+
+/// Comment out a specific value of a repeatable option.
+/// Unlike `comment_option` which comments ALL occurrences, this only
+/// comments the first exact match of key + value.
+/// Returns true if a matching entry was found and commented out.
+pub fn comment_option_value(config: &mut ConfigFile, key: &str, value: &str) -> bool {
+    for line in &mut config.lines {
+        if let ConfigLine::KeyValue { key: k, value: v } = line {
+            if k == key && v == value {
+                let commented = format!("# {} = {}", k, v);
+                *line = ConfigLine::Comment(commented);
+                return true;
+            }
+        }
+    }
+    false
+}
+
 /// Write the config file back to disk.
 pub fn write_config(config: &ConfigFile) -> anyhow::Result<()> {
     let contents = config.to_string();
@@ -128,6 +188,94 @@ mod tests {
         assert!(config.get("font-family").is_none());
         // Both lines should be comments now
         assert!(config.lines.iter().all(|l| matches!(l, ConfigLine::Comment(_))));
+    }
+
+    #[test]
+    fn append_option_adds_new_entry() {
+        let mut config = ConfigFile::parse("keybind = ctrl+a=new_tab\n", "/test");
+        let appended = append_option(&mut config, "keybind", "ctrl+b=new_window");
+        assert!(appended);
+        let all = config.get_all("keybind");
+        assert_eq!(all.len(), 2);
+        assert_eq!(all[0], "ctrl+a=new_tab");
+        assert_eq!(all[1], "ctrl+b=new_window");
+    }
+
+    #[test]
+    fn append_option_rejects_exact_duplicate() {
+        let mut config = ConfigFile::parse("keybind = ctrl+a=new_tab\n", "/test");
+        let appended = append_option(&mut config, "keybind", "ctrl+a=new_tab");
+        assert!(!appended);
+        assert_eq!(config.get_all("keybind").len(), 1);
+    }
+
+    #[test]
+    fn append_option_allows_same_trigger_different_action() {
+        let mut config = ConfigFile::parse("keybind = ctrl+a=new_tab\n", "/test");
+        let appended = append_option(&mut config, "keybind", "ctrl+a=new_window");
+        assert!(appended);
+        assert_eq!(config.get_all("keybind").len(), 2);
+    }
+
+    #[test]
+    fn append_option_groups_after_last_occurrence() {
+        let mut config = ConfigFile::parse(
+            "font-size = 14\nkeybind = ctrl+a=new_tab\ntheme = dark\n",
+            "/test",
+        );
+        append_option(&mut config, "keybind", "ctrl+b=new_window");
+        let output = config.to_string();
+        let lines: Vec<&str> = output.lines().collect();
+        let positions: Vec<usize> = lines
+            .iter()
+            .enumerate()
+            .filter(|(_, l)| l.starts_with("keybind"))
+            .map(|(i, _)| i)
+            .collect();
+        assert_eq!(positions.len(), 2);
+        assert_eq!(positions[1], positions[0] + 1); // adjacent
+    }
+
+    #[test]
+    fn append_option_first_entry() {
+        let mut config = ConfigFile::parse("font-size = 14\n", "/test");
+        let appended = append_option(&mut config, "keybind", "ctrl+a=new_tab");
+        assert!(appended);
+        assert_eq!(config.get("keybind"), Some("ctrl+a=new_tab".to_string()));
+    }
+
+    #[test]
+    fn comment_option_value_removes_specific_entry() {
+        let mut config = ConfigFile::parse(
+            "keybind = ctrl+a=new_tab\nkeybind = ctrl+b=new_window\n",
+            "/test",
+        );
+        let found = comment_option_value(&mut config, "keybind", "ctrl+a=new_tab");
+        assert!(found);
+        let all = config.get_all("keybind");
+        assert_eq!(all.len(), 1);
+        assert_eq!(all[0], "ctrl+b=new_window");
+    }
+
+    #[test]
+    fn comment_option_value_nonexistent() {
+        let mut config = ConfigFile::parse("keybind = ctrl+a=new_tab\n", "/test");
+        let found = comment_option_value(&mut config, "keybind", "ctrl+z=quit");
+        assert!(!found);
+        assert_eq!(config.get_all("keybind").len(), 1);
+    }
+
+    #[test]
+    fn comment_option_value_preserves_as_comment() {
+        let mut config = ConfigFile::parse(
+            "keybind = ctrl+a=new_tab\nkeybind = ctrl+b=new_window\n",
+            "/test",
+        );
+        comment_option_value(&mut config, "keybind", "ctrl+a=new_tab");
+        assert!(config
+            .lines
+            .iter()
+            .any(|l| matches!(l, ConfigLine::Comment(s) if s.contains("ctrl+a=new_tab"))));
     }
 
     #[test]
