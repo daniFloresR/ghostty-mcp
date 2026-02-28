@@ -21,21 +21,7 @@ MCP server for [Ghostty](https://ghostty.org) terminal configuration. Search, re
 curl -fsSL https://raw.githubusercontent.com/daniFloresR/ghostty-mcp/main/scripts/install.sh | bash
 ```
 
-Or manually:
-
-```bash
-docker pull ghcr.io/danifloresr/ghostty-mcp:latest
-
-# macOS
-claude mcp add ghostty-mcp --scope user -- docker run -i --rm \
-  -v "$HOME/Library/Application Support/com.mitchellh.ghostty:/config/ghostty" \
-  ghcr.io/danifloresr/ghostty-mcp:latest
-
-# Linux
-claude mcp add ghostty-mcp --scope user -- docker run -i --rm \
-  -v "$HOME/.config/ghostty:/config/ghostty" \
-  ghcr.io/danifloresr/ghostty-mcp:latest
-```
+This installs a wrapper script at `~/.local/bin/ghostty-mcp` that auto-updates the Docker image in the background on each Claude Code startup.
 
 ### Option 2: Build from source (no Docker)
 
@@ -49,6 +35,11 @@ When running natively, the server auto-detects your config path:
 2. `XDG_CONFIG_HOME/ghostty/config`
 3. `~/Library/Application Support/com.mitchellh.ghostty/config` (macOS)
 4. `~/.config/ghostty/config` (default)
+
+## Updating
+
+- **Docker**: Updates happen automatically. Each Claude Code startup pulls the latest image in the background. The update takes effect on the next session.
+- **Source**: Run `cargo install --force --git https://github.com/daniFloresR/ghostty-mcp` to update manually.
 
 ## Usage with Claude Code
 
