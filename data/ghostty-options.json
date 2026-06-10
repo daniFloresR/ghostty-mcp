@@ -1,5 +1,20 @@
 [
   {
+    "name": "language",
+    "description": "Set Ghostty's graphical user interface language to a language other than the\nsystem default language. For example:\n\n    language = de\n\nwill force the strings in Ghostty's graphical user interface to be in German\nrather than the system default.\n\nThis will not affect the language used by programs run _within_ Ghostty.\nThose will continue to use the default system language. There are also many\nnon-GUI elements in Ghostty that are not translated - this setting will have\nno effect on those.\n\nWarning: This setting cannot be reloaded at runtime. To change the language\nyou must fully restart Ghostty.\n\nGTK only.\nAvailable since 1.3.0.",
+    "default_value": "",
+    "option_type": "string",
+    "valid_values": null,
+    "category": "general",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "language"
+    ],
+    "related_options": null
+  },
+  {
     "name": "font-family",
     "description": "The font families to use.\n\nYou can generate the list of valid values using the CLI:\n\n    ghostty +list-fonts\n\nThis configuration can be repeated multiple times to specify preferred\nfallback fonts when the requested codepoint is not available in the primary\nfont. This is particularly useful for multiple languages, symbolic fonts,\netc.\n\nNotes on emoji specifically: On macOS, Ghostty by default will always use\nApple Color Emoji and on Linux will always use Noto Emoji. You can\noverride this behavior by specifying a font family here that contains\nemoji glyphs.\n\nThe specific styles (bold, italic, bold italic) do not need to be\nexplicitly set. If a style is not set, then the regular style (font-family)\nwill be searched for stylistic variants. If a stylistic variant is not\nfound, Ghostty will use the regular style. This prevents falling back to a\ndifferent font family just to get a style such as bold. This also applies\nif you explicitly specify a font family for a style. For example, if you\nset `font-family-bold = FooBar` and \"FooBar\" cannot be found, Ghostty will\nuse whatever font is set for `font-family` for the bold style.\n\nFinally, some styles may be synthesized if they are not supported.\nFor example, if a font does not have an italic style and no alternative\nitalic font is specified, Ghostty will synthesize an italic style by\napplying a slant to the regular style. If you want to disable these\nsynthesized styles then you can use the `font-style` configurations\nas documented below.\n\nYou can disable styles completely by using the `font-style` set of\nconfigurations. See the documentation for `font-style` for more information.\n\nIf you want to overwrite a previous set value rather than append a fallback,\nspecify the value as `\"\"` (empty string) to reset the list and then set the\nnew values. For example:\n\n    font-family = \"\"\n    font-family = \"My Favorite Font\"\n\nSetting any of these as CLI arguments will automatically clear the\nvalues set in configuration files so you don't need to specify\n`--font-family=\"\"` before setting a new value. You only need to specify\nthis within config files if you want to clear previously set values in\nconfiguration files or on the CLI if you want to clear values set on the\nCLI.",
     "default_value": "",
@@ -344,6 +359,23 @@
     "search_terms": [
       "codepoint",
       "font",
+      "map"
+    ],
+    "related_options": null
+  },
+  {
+    "name": "clipboard-codepoint-map",
+    "description": "Map specific Unicode codepoints to replacement values when copying text\nto clipboard.\n\nThis configuration allows you to replace specific Unicode characters with\nother characters or strings when copying terminal content to the clipboard.\nThis is useful for converting special terminal symbols to more compatible\ncharacters for pasting into other applications.\n\nThe syntax is similar to `font-codepoint-map`:\n- Single codepoint: `U+1234=U+ABCD` or `U+1234=replacement_text`\n- Codepoint range: `U+1234-U+5678=U+ABCD`\n\nExamples:\n- `clipboard-codepoint-map = U+2500=U+002D` (box drawing horizontal \u2192 hyphen)\n- `clipboard-codepoint-map = U+2502=U+007C` (box drawing vertical \u2192 pipe)\n- `clipboard-codepoint-map = U+03A3=SUM` (Greek sigma \u2192 \"SUM\")\n\nThis configuration can be repeated multiple times to specify multiple\nmappings. Later entries take priority over earlier ones for overlapping\nranges.\n\nNote: This only applies to text copying operations, not URL copying.",
+    "default_value": "",
+    "option_type": "string",
+    "valid_values": null,
+    "category": "clipboard",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": true,
+    "search_terms": [
+      "clipboard",
+      "codepoint",
       "map"
     ],
     "related_options": null
@@ -696,14 +728,15 @@
   },
   {
     "name": "freetype-load-flags",
-    "description": "FreeType load flags to enable. The format of this is a list of flags to\nenable separated by commas. If you prefix a flag with `no-` then it is\ndisabled. If you omit a flag, its default value is used, so you must\nexplicitly disable flags you don't want. You can also use `true` or `false`\nto turn all flags on or off.\n\nThis configuration only applies to Ghostty builds that use FreeType.\nThis is usually the case only for Linux builds. macOS uses CoreText\nand does not have an equivalent configuration.\n\nAvailable flags:\n\n  * `hinting` - Enable or disable hinting. Enabled by default.\n\n  * `force-autohint` - Always use the freetype auto-hinter instead of\n    the font's native hinter. Disabled by default.\n\n  * `monochrome` - Instructs renderer to use 1-bit monochrome rendering.\n    This will disable anti-aliasing, and probably not look very good unless\n    you're using a pixel font. Disabled by default.\n\n  * `autohint` - Enable the freetype auto-hinter. Enabled by default.\n\nExample: `hinting`, `no-hinting`, `force-autohint`, `no-force-autohint`",
-    "default_value": "hinting,no-force-autohint,no-monochrome,autohint",
+    "description": "FreeType load flags to enable. The format of this is a list of flags to\nenable separated by commas. If you prefix a flag with `no-` then it is\ndisabled. If you omit a flag, its default value is used, so you must\nexplicitly disable flags you don't want. You can also use `true` or `false`\nto turn all flags on or off.\n\nThis configuration only applies to Ghostty builds that use FreeType.\nThis is usually the case only for Linux builds. macOS uses CoreText\nand does not have an equivalent configuration.\n\nAvailable flags:\n\n  * `hinting` - Enable or disable hinting. Enabled by default.\n\n  * `force-autohint` - Always use the freetype auto-hinter instead of\n    the font's native hinter. Disabled by default.\n\n  * `monochrome` - Instructs renderer to use 1-bit monochrome rendering.\n    This will disable anti-aliasing, and probably not look very good unless\n    you're using a pixel font. Disabled by default.\n\n  * `autohint` - Enable the freetype auto-hinter. Enabled by default.\n\n  * `light` - Use a light hinting style, better preserving glyph shapes.\n    This is the most common setting in GTK apps and therefore also Ghostty's\n    default. This has no effect if `monochrome` is enabled. Enabled by\n    default.\n\nExample: `hinting`, `no-hinting`, `force-autohint`, `no-force-autohint`",
+    "default_value": "hinting,no-force-autohint,no-monochrome,autohint,light",
     "option_type": "string",
     "valid_values": [
       "hinting",
       "force-autohint",
       "monochrome",
-      "autohint"
+      "autohint",
+      "light"
     ],
     "category": "font",
     "platform": null,
@@ -921,7 +954,8 @@
     "related_options": [
       "selection-background",
       "selection-clear-on-typing",
-      "selection-clear-on-copy"
+      "selection-clear-on-copy",
+      "selection-word-chars"
     ]
   },
   {
@@ -943,7 +977,8 @@
     "related_options": [
       "selection-foreground",
       "selection-clear-on-typing",
-      "selection-clear-on-copy"
+      "selection-clear-on-copy",
+      "selection-word-chars"
     ]
   },
   {
@@ -985,6 +1020,23 @@
     ]
   },
   {
+    "name": "selection-word-chars",
+    "description": "Characters that mark word boundaries during text selection operations such\nas double-clicking. When selecting a word, the selection will stop at any\nof these characters.\n\nThis is similar to the `WORDCHARS` environment variable in zsh, except this\nspecifies the boundary characters rather than the word characters. The\ndefault includes common delimiters and punctuation that typically separate\nwords in code and prose.\n\nEach character in this string becomes a word boundary. Multi-byte UTF-8\ncharacters are supported, but only single codepoints can be specified.\nMulti-codepoint sequences (e.g. emoji) are not supported.\n\nThe null character (U+0000) is always treated as a boundary and does not\nneed to be included in this configuration.\n\nDefault: `` \\t'\"\u2502`|:;,()[]{}<>$ ``\n\nTo add or remove specific characters, you can set this to a custom value.\nFor example, to treat semicolons as part of words:\n\n    selection-word-chars = \" \\t'\\\"\u2502`|:,()[]{}<>$\"\n\nAvailable since: 1.3.0",
+    "default_value": "'\"\u2502`|:;,()[]{}<>$",
+    "option_type": "string",
+    "valid_values": null,
+    "category": "selection",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "chars",
+      "selection",
+      "word"
+    ],
+    "related_options": null
+  },
+  {
     "name": "minimum-contrast",
     "description": "The minimum contrast ratio between the foreground and background colors.\nThe contrast ratio is a value between 1 and 21. A value of 1 allows for no\ncontrast (e.g. black on black). This value is the contrast ratio as defined\nby the [WCAG 2.0 specification](https://www.w3.org/TR/WCAG20/).\n\nIf you want to avoid invisible text (same color as background), a value of\n1.1 is a good value. If you want to avoid text that is difficult to read, a\nvalue of 3 or higher is a good value. The higher the value, the more likely\nthat text will become black or white.\n\nThis value does not apply to Emoji or images.",
     "default_value": "1",
@@ -1004,7 +1056,7 @@
   },
   {
     "name": "palette",
-    "description": "Color palette for the 256 color form that many terminal applications use.\nThe syntax of this configuration is `N=COLOR` where `N` is 0 to 255 (for\nthe 256 colors in the terminal color table) and `COLOR` is a typical RGB\ncolor code such as `#AABBCC` or `AABBCC`, or a named X11 color.\n\nThe palette index can be in decimal, binary, octal, or hexadecimal.\nDecimal is assumed unless a prefix is used: `0b` for binary, `0o` for octal,\nand `0x` for hexadecimal.\n\nFor definitions on the color indices and what they canonically map to,\n[see this cheat sheet](https://www.ditig.com/256-colors-cheat-sheet).",
+    "description": "Color palette for the 256 color form that many terminal applications use.\nThe syntax of this configuration is `N=COLOR` where `N` is 0 to 255 (for\nthe 256 colors in the terminal color table) and `COLOR` is a typical RGB\ncolor code such as `#AABBCC` or `AABBCC`, or a named X11 color. For example,\n`palette = 5=#BB78D9` will set the 'purple' color.\n\nThe palette index can be in decimal, binary, octal, or hexadecimal.\nDecimal is assumed unless a prefix is used: `0b` for binary, `0o` for octal,\nand `0x` for hexadecimal.\n\nFor definitions on the color indices and what they canonically map to,\n[see this cheat sheet](https://www.ditig.com/256-colors-cheat-sheet).\n\nFor most themes, you only need to set the first 16 colors (0\u201315) since the\nrest of the palette (16\u2013255) will be automatically generated by\ndefault (see `palette-generate` for more details).",
     "default_value": "0=#1d1f21",
     "option_type": "color",
     "valid_values": null,
@@ -1015,7 +1067,46 @@
     "search_terms": [
       "palette"
     ],
-    "related_options": null
+    "related_options": [
+      "palette-generate",
+      "palette-harmonious"
+    ]
+  },
+  {
+    "name": "palette-generate",
+    "description": "Whether to automatically generate the extended 256 color palette\n(indices 16\u2013255) from the base 16 ANSI colors.\n\nThis lets theme authors specify only the base 16 colors and have the\nrest of the palette be automatically generated in a consistent and\naesthetic way.\n\nWhen enabled, the 6\u00d76\u00d76 color cube and 24-step grayscale ramp are\nderived from interpolations of the base palette, giving a more cohesive\nlook. Colors that have been explicitly set via `palette` are never\noverwritten.\n\nThe default value is false (disabled), because many legacy programs\nusing the 256-color palette hardcode assumptions about what these\ncolors are (mostly assuming the xterm 256 color palette). However, this\nis still a very useful tool for theme authors and users who want\nto customize their palette without having to specify all 256 colors.\n\nFor more information on how the generation works, see here:\nhttps://gist.github.com/jake-stewart/0a8ea46159a7da2c808e5be2177e1783\n\nAvailable since: 1.3.0",
+    "default_value": "false",
+    "option_type": "boolean",
+    "valid_values": null,
+    "category": "color",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "generate",
+      "palette"
+    ],
+    "related_options": [
+      "palette-harmonious"
+    ]
+  },
+  {
+    "name": "palette-harmonious",
+    "description": "Invert the palette colors generated when `palette-generate` is enabled,\nso that the colors go in reverse order. This allows palette-based\napplications to work well in both light and dark mode since the\npalettes are always relatively good colors.\n\nThis defaults to off because some legacy terminal applications\nhardcode the assumption that palette indices 16\u2013231 are ordered from\ndarkest to lightest, so enabling this would make them unreadable.\nThis is not a generally good assumption and we encourage modern\nterminal applications to use the indices in a more semantic way.\n\nThis has no effect if `palette-generate` is disabled.\n\nFor more information see `palette-generate`.\n\nAvailable since: 1.3.0",
+    "default_value": "false",
+    "option_type": "boolean",
+    "valid_values": null,
+    "category": "color",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "harmonious",
+      "palette"
+    ],
+    "related_options": [
+      "palette-generate"
+    ]
   },
   {
     "name": "cursor-color",
@@ -1139,7 +1230,7 @@
   },
   {
     "name": "cursor-click-to-move",
-    "description": "Enables the ability to move the cursor at prompts by using `alt+click` on\nLinux and `option+click` on macOS.\n\nThis feature requires shell integration (specifically prompt marking\nvia `OSC 133`) and only works in primary screen mode. Alternate screen\napplications like vim usually have their own version of this feature but\nthis configuration doesn't control that.\n\nIt should be noted that this feature works by translating your desired\nposition into a series of synthetic arrow key movements, so some weird\nbehavior around edge cases are to be expected. This is unfortunately how\nthis feature is implemented across terminals because there isn't any other\nway to implement it.",
+    "description": "Enables the ability to move the cursor at prompts by clicking on a\nlocation in the prompt text.\n\nThis feature requires shell integration, specifically prompt marking\nvia `OSC 133`. Some shells like Fish (v4) and Nu (0.111+) natively\nsupport this while others may require additional configuration or\nGhostty's shell integration features to be enabled.\n\nDepending on the shell, this works either by translating your click\nposition into a series of synthetic arrow key movements or by sending\na click event directly to the shell. In either case, some unexpected\nbehavior around edge cases is possible.",
     "default_value": "true",
     "option_type": "boolean",
     "valid_values": null,
@@ -1176,7 +1267,7 @@
   },
   {
     "name": "scroll-to-bottom",
-    "description": "When to scroll the surface to the bottom. The format of this is a list of\noptions to enable separated by commas. If you prefix an option with `no-`\nthen it is disabled. If you omit an option, its default value is used.\n\nAvailable options:\n\n- `keystroke` If set, scroll the surface to the bottom when the user\n  presses a key that results in data being sent to the PTY (basically\n  anything but modifiers or keybinds that are processed by Ghostty).\n\n- `output` If set, scroll the surface to the bottom if there is new data\n  to display. (Currently unimplemented.)\n\nThe default is `keystroke, no-output`.",
+    "description": "When to scroll the surface to the bottom. The format of this is a list of\noptions to enable separated by commas. If you prefix an option with `no-`\nthen it is disabled. If you omit an option, its default value is used.\n\nAvailable options:\n\n- `keystroke` If set, scroll the surface to the bottom when the user\n  presses a key that results in data being sent to the PTY (basically\n  anything but modifiers or keybinds that are processed by Ghostty).\n\n- `output` If set, scroll the surface to the bottom if there is new data\n  to display (e.g., when new lines are printed to the terminal).\n\nThe default is `keystroke, no-output`.",
     "default_value": "keystroke,no-output",
     "option_type": "string",
     "valid_values": null,
@@ -1206,6 +1297,26 @@
       "shift"
     ],
     "related_options": null
+  },
+  {
+    "name": "mouse-reporting",
+    "description": "Enable or disable mouse reporting. When set to `false`, mouse events will\nnot be reported to terminal applications even if they request it. This\nallows you to always use the mouse for selection and other terminal UI\ninteractions without applications capturing mouse input.\n\nWhen set to `true` (the default), terminal applications can request mouse\nreporting and will receive mouse events according to their requested mode.\n\nThis can be toggled at runtime using the `toggle_mouse_reporting` keybind\naction.",
+    "default_value": "true",
+    "option_type": "boolean",
+    "valid_values": null,
+    "category": "mouse",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "mouse",
+      "reporting"
+    ],
+    "related_options": [
+      "mouse-hide-while-typing",
+      "mouse-shift-capture",
+      "mouse-scroll-multiplier"
+    ]
   },
   {
     "name": "mouse-scroll-multiplier",
@@ -1271,7 +1382,7 @@
   },
   {
     "name": "background-blur",
-    "description": "Whether to blur the background when `background-opacity` is less than 1.\n\nValid values are:\n\n  * a nonnegative integer specifying the *blur intensity*\n  * `false`, equivalent to a blur intensity of 0\n  * `true`, equivalent to the default blur intensity of 20, which is\n    reasonable for a good looking blur. Higher blur intensities may\n    cause strange rendering and performance issues.\n\nSupported on macOS and on some Linux desktop environments, including:\n\n  * KDE Plasma (Wayland and X11)\n\nWarning: the exact blur intensity is _ignored_ under KDE Plasma, and setting\nthis setting to either `true` or any positive blur intensity value would\nachieve the same effect. The reason is that KWin, the window compositor\npowering Plasma, only has one global blur setting and does not allow\napplications to specify individual blur settings.\n\nTo configure KWin's global blur setting, open System Settings and go to\n\"Apps & Windows\" > \"Window Management\" > \"Desktop Effects\" and select the\n\"Blur\" plugin. If disabled, enable it by ticking the checkbox to the left.\nThen click on the \"Configure\" button and there will be two sliders that\nallow you to set background blur and noise intensities for all apps,\nincluding Ghostty.\n\nAll other Linux desktop environments are as of now unsupported. Users may\nneed to set environment-specific settings and/or install third-party plugins\nin order to support background blur, as there isn't a unified interface for\ndoing so.",
+    "description": "Whether to blur the background when `background-opacity` is less than 1.\n\nValid values are:\n\n  * a nonnegative integer specifying the *blur intensity*\n  * `false`, equivalent to a blur intensity of 0\n  * `true`, equivalent to the default blur intensity of 20, which is\n    reasonable for a good looking blur. Higher blur intensities may\n    cause strange rendering and performance issues.\n\nOn macOS 26.0 and later, there are additional special values that\ncan be set to use the native macOS glass effects:\n\n  * `macos-glass-regular` - Standard glass effect with some opacity\n  * `macos-glass-clear` - Highly transparent glass effect\n\nIf the macOS values are set, then this implies `background-blur = true`\non non-macOS platforms.\n\nSupported on macOS and on some Linux desktop environments, including:\n\n  * KDE Plasma (Wayland and X11)\n\nWarning: the exact blur intensity is _ignored_ under KDE Plasma, and setting\nthis setting to either `true` or any positive blur intensity value would\nachieve the same effect. The reason is that KWin, the window compositor\npowering Plasma, only has one global blur setting and does not allow\napplications to specify individual blur settings.\n\nTo configure KWin's global blur setting, open System Settings and go to\n\"Apps & Windows\" > \"Window Management\" > \"Desktop Effects\" and select the\n\"Blur\" plugin. If disabled, enable it by ticking the checkbox to the left.\nThen click on the \"Configure\" button and there will be two sliders that\nallow you to set background blur and noise intensities for all apps,\nincluding Ghostty.\n\nAll other Linux desktop environments are as of now unsupported. Users may\nneed to set environment-specific settings and/or install third-party plugins\nin order to support background blur, as there isn't a unified interface for\ndoing so.",
     "default_value": "false",
     "option_type": "boolean",
     "valid_values": null,
@@ -1349,6 +1460,101 @@
     "related_options": null
   },
   {
+    "name": "split-preserve-zoom",
+    "description": "Control when Ghostty preserves a zoomed split. Under normal circumstances,\nany operation that changes focus or layout of the split tree in a window\nwill unzoom any zoomed split. This configuration allows you to control\nthis behavior.\n\nThis can be set to `navigation` to preserve the zoomed split state\nwhen navigating to another split (e.g. via `goto_split`). This will\nchange the zoomed split to the newly focused split instead of unzooming.\n\nAny options can also be prefixed with `no-` to disable that option.\n\nExample: `split-preserve-zoom = navigation`\n\nAvailable since: 1.3.0",
+    "default_value": "no-navigation",
+    "option_type": "string",
+    "valid_values": null,
+    "category": "window",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "preserve",
+      "split",
+      "zoom"
+    ],
+    "related_options": null
+  },
+  {
+    "name": "search-foreground",
+    "description": "The foreground and background color for search matches. This only applies\nto non-focused search matches, also known as candidate matches.\n\nValid values:\n\n  - Hex (`#RRGGBB` or `RRGGBB`)\n  - Named X11 color\n  - \"cell-foreground\" to match the cell foreground color\n  - \"cell-background\" to match the cell background color\n\nThe default value is black text on a golden yellow background.",
+    "default_value": "#000000",
+    "option_type": "color",
+    "valid_values": null,
+    "category": "color",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "foreground",
+      "search"
+    ],
+    "related_options": [
+      "search-background",
+      "search-selected-foreground",
+      "search-selected-background"
+    ]
+  },
+  {
+    "name": "search-background",
+    "description": "The foreground and background color for search matches. This only applies\nto non-focused search matches, also known as candidate matches.\n\nValid values:\n\n  - Hex (`#RRGGBB` or `RRGGBB`)\n  - Named X11 color\n  - \"cell-foreground\" to match the cell foreground color\n  - \"cell-background\" to match the cell background color\n\nThe default value is black text on a golden yellow background.",
+    "default_value": "#ffe082",
+    "option_type": "color",
+    "valid_values": null,
+    "category": "color",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "background",
+      "search"
+    ],
+    "related_options": [
+      "search-foreground",
+      "search-selected-foreground",
+      "search-selected-background"
+    ]
+  },
+  {
+    "name": "search-selected-foreground",
+    "description": "The foreground and background color for the currently selected search match.\nThis is the focused match that will be jumped to when using next/previous\nsearch navigation.\n\nValid values:\n\n  - Hex (`#RRGGBB` or `RRGGBB`)\n  - Named X11 color\n  - \"cell-foreground\" to match the cell foreground color\n  - \"cell-background\" to match the cell background color\n\nThe default value is black text on a soft peach background.",
+    "default_value": "#000000",
+    "option_type": "color",
+    "valid_values": null,
+    "category": "color",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "foreground",
+      "search",
+      "selected"
+    ],
+    "related_options": [
+      "search-selected-background"
+    ]
+  },
+  {
+    "name": "search-selected-background",
+    "description": "The foreground and background color for the currently selected search match.\nThis is the focused match that will be jumped to when using next/previous\nsearch navigation.\n\nValid values:\n\n  - Hex (`#RRGGBB` or `RRGGBB`)\n  - Named X11 color\n  - \"cell-foreground\" to match the cell foreground color\n  - \"cell-background\" to match the cell background color\n\nThe default value is black text on a soft peach background.",
+    "default_value": "#f2a57e",
+    "option_type": "color",
+    "valid_values": null,
+    "category": "color",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "background",
+      "search",
+      "selected"
+    ],
+    "related_options": [
+      "search-selected-foreground"
+    ]
+  },
+  {
     "name": "command",
     "description": "The command to run, usually a shell. If this is not an absolute path, it'll\nbe looked up in the `PATH`. If this is not set, a default will be looked up\nfrom your system. The rules for the default lookup are:\n\n  * `SHELL` environment variable\n\n  * `passwd` entry (user information)\n\nThis can contain additional arguments to run the command with. If additional\narguments are provided, the command will be executed using `/bin/sh -c`\nto offload shell argument expansion.\n\nTo avoid shell expansion altogether, prefix the command with `direct:`, e.g.\n`direct:nvim foo`. This will avoid the roundtrip to `/bin/sh` but will also\nnot support any shell parsing such as arguments with spaces, filepaths with\n`~`, globs, etc. (Available since: 1.2.0)\n\nYou can also explicitly prefix the command with `shell:` to always wrap the\ncommand in a shell. This can be used to ensure our heuristics to choose the\nright mode are not used in case they are wrong. (Available since: 1.2.0)\n\nThis command will be used for all new terminal surfaces, i.e. new windows,\ntabs, etc. If you want to run a command only for the first terminal surface\ncreated when Ghostty starts, use the `initial-command` configuration.\n\nGhostty supports the common `-e` flag for executing a command with\narguments. For example, `ghostty -e fish --with --custom --args`.\nThis flag sets the `initial-command` configuration, see that for more\ninformation.",
     "default_value": "",
@@ -1390,6 +1596,73 @@
     ],
     "related_options": [
       "initial-window"
+    ]
+  },
+  {
+    "name": "notify-on-command-finish",
+    "description": "Controls when command finished notifications are sent. There are\nthree options:\n\n* `never` - Never send notifications (the default).\n* `unfocused` - Only send notifications if the surface that the command is\n  running in is not focused.\n* `always` - Always send notifications.\n\nCommand finished notifications requires that either shell integration is\nenabled, or that your shell sends OSC 133 escape sequences to mark the start\nand end of commands.\n\nOn GTK, there is a context menu item that will enable command finished\nnotifications for a single command, overriding the `never` and `unfocused`\noptions.\n\nAvailable since 1.3.0.",
+    "default_value": "never",
+    "option_type": "enum",
+    "valid_values": [
+      "never",
+      "unfocused",
+      "always"
+    ],
+    "category": "general",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "command",
+      "finish",
+      "notify"
+    ],
+    "related_options": [
+      "notify-on-command-finish-action",
+      "notify-on-command-finish-after"
+    ]
+  },
+  {
+    "name": "notify-on-command-finish-action",
+    "description": "If command finished notifications are enabled, this controls how the user is\nnotified.\n\nAvailable options:\n\n* `bell` - enabled by default\n* `notify` - disabled by default\n\nOptions can be combined by listing them as a comma separated list. Options\ncan be negated by prefixing them with `no-`. For example `no-bell,notify`.\n\nAvailable since 1.3.0.",
+    "default_value": "bell,no-notify",
+    "option_type": "enum",
+    "valid_values": [
+      "bell",
+      "notify"
+    ],
+    "category": "general",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "action",
+      "command",
+      "finish",
+      "notify"
+    ],
+    "related_options": [
+      "notify-on-command-finish-after"
+    ]
+  },
+  {
+    "name": "notify-on-command-finish-after",
+    "description": "If command finished notifications are enabled, this controls how long a\ncommand must have been running before a notification will be sent. The\ndefault is five seconds.\n\nThe duration is specified as a series of numbers followed by time units.\nWhitespace is allowed between numbers and units. Each number and unit will\nbe added together to form the total duration.\n\nThe allowed time units are as follows:\n\n  * `y` - 365 SI days, or 8760 hours, or 31536000 seconds. No adjustments\n    are made for leap years or leap seconds.\n  * `d` - one SI day, or 86400 seconds.\n  * `h` - one hour, or 3600 seconds.\n  * `m` - one minute, or 60 seconds.\n  * `s` - one second.\n  * `ms` - one millisecond, or 0.001 second.\n  * `us` or `\u00b5s` - one microsecond, or 0.000001 second.\n  * `ns` - one nanosecond, or 0.000000001 second.\n\nExamples:\n  * `1h30m`\n  * `45s`\n\nUnits can be repeated and will be added together. This means that\n`1h1h` is equivalent to `2h`. This is confusing and should be avoided.\nA future update may disallow this.\n\nThe maximum value is `584y 49w 23h 34m 33s 709ms 551\u00b5s 615ns`. Any\nvalue larger than this will be clamped to the maximum value.\n\nAvailable since 1.3.0",
+    "default_value": "5s",
+    "option_type": "number",
+    "valid_values": null,
+    "category": "general",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": true,
+    "search_terms": [
+      "after",
+      "command",
+      "finish",
+      "notify"
+    ],
+    "related_options": [
+      "notify-on-command-finish-action"
     ]
   },
   {
@@ -1477,6 +1750,24 @@
     "related_options": null
   },
   {
+    "name": "scrollbar",
+    "description": "Control when the scrollbar is shown to scroll the scrollback buffer.\n\nThe default value is `system`.\n\nValid values:\n\n  * `system` - Respect the system settings for when to show scrollbars.\n    For example, on macOS, this will respect the \"Scrollbar behavior\"\n    system setting which by default usually only shows scrollbars while\n    actively scrolling or hovering the gutter.\n\n  * `never` - Never show a scrollbar. You can still scroll using the mouse,\n    keybind actions, etc. but you will not have a visual UI widget showing\n    a scrollbar.",
+    "default_value": "system",
+    "option_type": "enum",
+    "valid_values": [
+      "system",
+      "never"
+    ],
+    "category": "keybind",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "scrollbar"
+    ],
+    "related_options": null
+  },
+  {
     "name": "link-url",
     "description": "Enable URL matching. URLs are matched on hover with control (Linux) or\ncommand (macOS) pressed and open using the default system application for\nthe linked URL.\n\nThe URL matcher is always lowest priority of any configured links (see\n`link`). If you want to customize URL matching, use `link` and disable this.",
     "default_value": "true",
@@ -1531,12 +1822,14 @@
   },
   {
     "name": "fullscreen",
-    "description": "Start new windows in fullscreen. This setting applies to new windows and\ndoes not apply to tabs, splits, etc. However, this setting will apply to all\nnew windows, not just the first one.\n\nOn macOS, this setting does not work if window-decoration is set to\n\"false\", because native fullscreen on macOS requires window decorations\nto be set.",
+    "description": "Start new windows in fullscreen. This setting applies to new windows and\ndoes not apply to tabs, splits, etc. However, this setting will apply to all\nnew windows, not just the first one.\n\nAllowable values are:\n\n  * `false` - Don't start in fullscreen (default)\n  * `true` - Start in native fullscreen\n  * `non-native` - (macOS only) Start in non-native fullscreen, hiding the\n    menu bar. This is faster than native fullscreen since it doesn't use\n    animations. On non-macOS platforms, this behaves the same as `true`.\n  * `non-native-visible-menu` - (macOS only) Start in non-native fullscreen,\n    keeping the menu bar visible. On non-macOS platforms, behaves like `true`.\n  * `non-native-padded-notch` - (macOS only) Start in non-native fullscreen,\n    hiding the menu bar but padding for the notch on applicable devices.\n    On non-macOS platforms, behaves like `true`.\n\nImportant: tabs DO NOT WORK with non-native fullscreen modes. Non-native\nfullscreen removes the titlebar and macOS native tabs require the titlebar.\nIf you use tabs, use `true` (native) instead.\n\nOn macOS, `true` (native fullscreen) does not work if `window-decoration`\nis set to `false`, because native fullscreen on macOS requires window\ndecorations.",
     "default_value": "false",
     "option_type": "boolean",
     "valid_values": null,
     "category": "window",
-    "platform": null,
+    "platform": [
+      "macos"
+    ],
     "reloadable": true,
     "repeatable": false,
     "search_terms": [
@@ -1597,7 +1890,7 @@
   },
   {
     "name": "working-directory",
-    "description": "The directory to change to after starting the command.\n\nThis setting is secondary to the `window-inherit-working-directory`\nsetting. If a previous Ghostty terminal exists in the same process,\n`window-inherit-working-directory` will take precedence. Otherwise, this\nsetting will be used. Typically, this setting is used only for the first\nwindow.\n\nThe default is `inherit` except in special scenarios listed next. On macOS,\nif Ghostty can detect it is launched from launchd (double-clicked) or\n`open`, then it defaults to `home`. On Linux with GTK, if Ghostty can detect\nit was launched from a desktop launcher, then it defaults to `home`.\n\nThe value of this must be an absolute value or one of the special values\nbelow:\n\n  * `home` - The home directory of the executing user.\n\n  * `inherit` - The working directory of the launching process.",
+    "description": "The directory to change to after starting the command.\n\nThis setting is secondary to the `window-inherit-working-directory`\nsetting. If a previous Ghostty terminal exists in the same process,\n`window-inherit-working-directory` will take precedence. Otherwise, this\nsetting will be used. Typically, this setting is used only for the first\nwindow.\n\nThe default is `inherit` except in special scenarios listed next. On macOS,\nif Ghostty can detect it is launched from launchd (double-clicked) or\n`open`, then it defaults to `home`. On Linux with GTK, if Ghostty can detect\nit was launched from a desktop launcher, then it defaults to `home`.\n\nThe value of this must be an absolute path, a path prefixed with `~/`\n(the tilde will be expanded to the user's home directory), or\none of the special values below:\n\n  * `home` - The home directory of the executing user.\n\n  * `inherit` - The working directory of the launching process.",
     "default_value": "",
     "option_type": "path",
     "valid_values": [
@@ -1616,8 +1909,8 @@
   },
   {
     "name": "keybind",
-    "description": "Key bindings. The format is `trigger=action`. Duplicate triggers will\noverwrite previously set values. The list of actions is available in\nthe documentation or using the `ghostty +list-actions` command.\n\nTrigger: `+`-separated list of keys and modifiers. Example: `ctrl+a`,\n`ctrl+shift+b`, `up`.\n\nIf the key is a single Unicode codepoint, the trigger will match\nany presses that produce that codepoint. These are impacted by\nkeyboard layouts. For example, `a` will match the `a` key on a\nQWERTY keyboard, but will match the `q` key on a AZERTY keyboard\n(assuming US physical layout).\n\nFor Unicode codepoints, matching is done by comparing the set of\nmodifiers with the unmodified codepoint. The unmodified codepoint is\nsometimes called an \"unshifted character\" in other software, but all\nmodifiers are considered, not only shift. For example, `ctrl+a` will match\n`a` but not `ctrl+shift+a` (which is `A` on a US keyboard).\n\nFurther, codepoint matching is case-insensitive and the unmodified\ncodepoint is always case folded for comparison. As a result,\n`ctrl+A` configured will match when `ctrl+a` is pressed. Note that\nthis means some key combinations are impossible depending on keyboard\nlayout. For example, `ctrl+_` is impossible on a US keyboard because\n`_` is `shift+-` and `ctrl+shift+-` is not equal to `ctrl+_` (because\nthe modifiers don't match!). More details on impossible key combinations\ncan be found at this excellent source written by Qt developers:\nhttps://doc.qt.io/qt-6/qkeysequence.html#keyboard-layout-issues\n\nPhysical key codes can be specified by using any of the key codes\nas specified by the [W3C specification](https://www.w3.org/TR/uievents-code/).\nFor example, `KeyA` will match the physical `a` key on a US standard\nkeyboard regardless of the keyboard layout. These are case-sensitive.\n\nFor aesthetic reasons, the w3c codes also support snake case. For\nexample, `key_a` is equivalent to `KeyA`. The only exceptions are\nfunction keys, e.g. `F1` is `f1` (no underscore). This is a consequence\nof our internal code using snake case but is purposely supported\nand tested so it is safe to use. It allows an all-lowercase binding\nwhich I find more aesthetically pleasing.\n\nFunction keys such as `insert`, `up`, `f5`, etc. are also specified\nusing the keys as specified by the previously linked W3C specification.\n\nPhysical keys always match with a higher priority than Unicode codepoints,\nso if you specify both `a` and `KeyA`, the physical key will always be used\nregardless of what order they are configured.\n\nValid modifiers are `shift`, `ctrl` (alias: `control`), `alt` (alias: `opt`,\n`option`), and `super` (alias: `cmd`, `command`). You may use the modifier\nor the alias. When debugging keybinds, the non-aliased modifier will always\nbe used in output.\n\nNote: The fn or \"globe\" key on keyboards are not supported as a\nmodifier. This is a limitation of the operating systems and GUI toolkits\nthat Ghostty uses.\n\nSome additional notes for triggers:\n\n  * modifiers cannot repeat, `ctrl+ctrl+a` is invalid.\n\n  * modifiers and keys can be in any order, `shift+a+ctrl` is *weird*,\n    but valid.\n\n  * only a single key input is allowed, `ctrl+a+b` is invalid.\n\nYou may also specify multiple triggers separated by `>` to require a\nsequence of triggers to activate the action. For example,\n`ctrl+a>n=new_window` will only trigger the `new_window` action if the\nuser presses `ctrl+a` followed separately by `n`. In other software, this\nis sometimes called a leader key, a key chord, a key table, etc. There\nis no hardcoded limit on the number of parts in a sequence.\n\nWarning: If you define a sequence as a CLI argument to `ghostty`,\nyou probably have to quote the keybind since `>` is a special character\nin most shells. Example: ghostty --keybind='ctrl+a>n=new_window'\n\nA trigger sequence has some special handling:\n\n  * Ghostty will wait an indefinite amount of time for the next key in\n    the sequence. There is no way to specify a timeout. The only way to\n    force the output of a prefix key is to assign another keybind to\n    specifically output that key (e.g. `ctrl+a>ctrl+a=text:foo`) or\n    press an unbound key which will send both keys to the program.\n\n  * If a prefix in a sequence is previously bound, the sequence will\n    override the previous binding. For example, if `ctrl+a` is bound to\n    `new_window` and `ctrl+a>n` is bound to `new_tab`, pressing `ctrl+a`\n    will do nothing.\n\n  * Adding to the above, if a previously bound sequence prefix is\n    used in a new, non-sequence binding, the entire previously bound\n    sequence will be unbound. For example, if you bind `ctrl+a>n` and\n    `ctrl+a>t`, and then bind `ctrl+a` directly, both `ctrl+a>n` and\n    `ctrl+a>t` will become unbound.\n\n  * Trigger sequences are not allowed for `global:` or `all:`-prefixed\n    triggers. This is a limitation we could remove in the future.\n\nAction is the action to take when the trigger is satisfied. It takes the\nformat `action` or `action:param`. The latter form is only valid if the\naction requires a parameter.\n\n  * `ignore` - Do nothing, ignore the key input. This can be used to\n    black hole certain inputs to have no effect.\n\n  * `unbind` - Remove the binding. This makes it so the previous action\n    is removed, and the key will be sent through to the child command\n    if it is printable. Unbind will remove any matching trigger,\n    including `physical:`-prefixed triggers without specifying the\n    prefix.\n\n  * `csi:text` - Send a CSI sequence. e.g. `csi:A` sends \"cursor up\".\n\n  * `esc:text` - Send an escape sequence. e.g. `esc:d` deletes to the\n    end of the word to the right.\n\n  * `text:text` - Send a string. Uses Zig string literal syntax.\n    e.g. `text:\\x15` sends Ctrl-U.\n\n  * All other actions can be found in the documentation or by using the\n    `ghostty +list-actions` command.\n\nSome notes for the action:\n\n  * The parameter is taken as-is after the `:`. Double quotes or\n    other mechanisms are included and NOT parsed. If you want to\n    send a string value that includes spaces, wrap the entire\n    trigger/action in double quotes. Example: `--keybind=\"up=csi:A B\"`\n\nThere are some additional special values that can be specified for\nkeybind:\n\n  * `keybind=clear` will clear all set keybindings. Warning: this\n    removes ALL keybindings up to this point, including the default\n    keybindings.\n\nThe keybind trigger can be prefixed with some special values to change\nthe behavior of the keybind. These are:\n\n * `all:`\n\n   Make the keybind apply to all terminal surfaces. By default,\n   keybinds only apply to the focused terminal surface. If this is true,\n   then the keybind will be sent to all terminal surfaces. This only\n   applies to actions that are surface-specific. For actions that\n   are already global (e.g. `quit`), this prefix has no effect.\n\n   Available since: 1.0.0\n\n * `global:`\n\n   Make the keybind global. By default, keybinds only work within Ghostty\n   and under the right conditions (application focused, sometimes terminal\n   focused, etc.). If you want a keybind to work globally across your system\n   (e.g. even when Ghostty is not focused), specify this prefix.\n   This prefix implies `all:`.\n\n   Note: this does not work in all environments; see the additional notes\n   below for more information.\n\n   Available since: 1.0.0 on macOS, 1.2.0 on GTK\n\n * `unconsumed:`\n\n   Do not consume the input. By default, a keybind will consume the input,\n   meaning that the associated encoding (if any) will not be sent to the\n   running program in the terminal. If you wish to send the encoded value\n   to the program, specify the `unconsumed:` prefix before the entire\n   keybind. For example: `unconsumed:ctrl+a=reload_config`. `global:` and\n   `all:`-prefixed keybinds will always consume the input regardless of\n   this setting. Since they are not associated with a specific terminal\n   surface, they're never encoded.\n\n   Available since: 1.0.0\n\n * `performable:`\n\n   Only consume the input if the action is able to be performed.\n   For example, the `copy_to_clipboard` action will only consume the input\n   if there is a selection to copy. If there is no selection, Ghostty\n   behaves as if the keybind was not set. This has no effect with `global:`\n   or `all:`-prefixed keybinds. For key sequences, this will reset the\n   sequence if the action is not performable (acting identically to not\n   having a keybind set at all).\n\n   Performable keybinds will not appear as menu shortcuts in the\n   application menu. This is because the menu shortcuts force the\n   action to be performed regardless of the state of the terminal.\n   Performable keybinds will still work, they just won't appear as\n   a shortcut label in the menu.\n\n   Available since: 1.1.0\n\nKeybind triggers are not unique per prefix combination. For example,\n`ctrl+a` and `global:ctrl+a` are not two separate keybinds. The keybind\nset later will overwrite the keybind set earlier. In this case, the\n`global:` keybind will be used.\n\nMultiple prefixes can be specified. For example,\n`global:unconsumed:ctrl+a=reload_config` will make the keybind global\nand not consume the input to reload the config.\n\nNote: `global:` is only supported on macOS and certain Linux platforms.\n\nOn macOS, this feature requires accessibility permissions to be granted\nto Ghostty. When a `global:` keybind is specified and Ghostty is launched\nor reloaded, Ghostty will attempt to request these permissions.\nIf the permissions are not granted, the keybind will not work. On macOS,\nyou can find these permissions in System Preferences -> Privacy & Security\n-> Accessibility.\n\nOn Linux, you need a desktop environment that implements the\n[Global Shortcuts](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.GlobalShortcuts.html)\nprotocol as a part of its XDG desktop protocol implementation.\nDesktop environments that are known to support (or not support)\nglobal shortcuts include:\n\n - Users using KDE Plasma (since [5.27](https://kde.org/announcements/plasma/5/5.27.0/#wayland))\n   and GNOME (since [48](https://release.gnome.org/48/#and-thats-not-all)) should be able\n   to use global shortcuts with little to no configuration.\n\n - Some manual configuration is required on Hyprland. Consult the steps\n   outlined on the [Hyprland Wiki](https://wiki.hyprland.org/Configuring/Binds/#dbus-global-shortcuts)\n   to set up global shortcuts correctly.\n   (Important: [`xdg-desktop-portal-hyprland`](https://wiki.hyprland.org/Hypr-Ecosystem/xdg-desktop-portal-hyprland/)\n   must also be installed!)\n\n - Notably, global shortcuts have not been implemented on wlroots-based\n   compositors like Sway (see [upstream issue](https://github.com/emersion/xdg-desktop-portal-wlr/issues/240)).",
-    "default_value": "super+shift+d=new_split:down",
+    "description": "Key bindings. The format is `trigger=action`. Duplicate triggers will\noverwrite previously set values. The list of actions is available in\nthe documentation or using the `ghostty +list-actions` command.\n\nTrigger: `+`-separated list of keys and modifiers. Example: `ctrl+a`,\n`ctrl+shift+b`, `up`.\n\nIf the key is a single Unicode codepoint, the trigger will match\nany presses that produce that codepoint. These are impacted by\nkeyboard layouts. For example, `a` will match the `a` key on a\nQWERTY keyboard, but will match the `q` key on a AZERTY keyboard\n(assuming US physical layout).\n\nFor Unicode codepoints, matching is done by comparing the set of\nmodifiers with the unmodified codepoint. The unmodified codepoint is\nsometimes called an \"unshifted character\" in other software, but all\nmodifiers are considered, not only shift. For example, `ctrl+a` will match\n`a` but not `ctrl+shift+a` (which is `A` on a US keyboard).\n\nFurther, codepoint matching is case-insensitive and the unmodified\ncodepoint is always case folded for comparison. As a result,\n`ctrl+A` configured will match when `ctrl+a` is pressed. Note that\nthis means some key combinations are impossible depending on keyboard\nlayout. For example, `ctrl+_` is impossible on a US keyboard because\n`_` is `shift+-` and `ctrl+shift+-` is not equal to `ctrl+_` (because\nthe modifiers don't match!). More details on impossible key combinations\ncan be found at this excellent source written by Qt developers:\nhttps://doc.qt.io/qt-6/qkeysequence.html#keyboard-layout-issues\n\nPhysical key codes can be specified by using any of the key codes\nas specified by the [W3C specification](https://www.w3.org/TR/uievents-code/).\nFor example, `KeyA` will match the physical `a` key on a US standard\nkeyboard regardless of the keyboard layout. These are case-sensitive.\n\nFor aesthetic reasons, the w3c codes also support snake case. For\nexample, `key_a` is equivalent to `KeyA`. The only exceptions are\nfunction keys, e.g. `F1` is `f1` (no underscore). This is a consequence\nof our internal code using snake case but is purposely supported\nand tested so it is safe to use. It allows an all-lowercase binding\nwhich I find more aesthetically pleasing.\n\nFunction keys such as `insert`, `up`, `f5`, etc. are also specified\nusing the keys as specified by the previously linked W3C specification.\n\nPhysical keys always match with a higher priority than Unicode codepoints,\nso if you specify both `a` and `KeyA`, the physical key will always be used\nregardless of what order they are configured.\n\nThe special key `catch_all` can be used to match any key that is not\notherwise bound. This can be combined with modifiers, for example\n`ctrl+catch_all` will match any key pressed with `ctrl` that is not\notherwise bound. When looking up a binding, Ghostty first tries to match\n`catch_all` with modifiers. If no match is found and the event has\nmodifiers, it falls back to `catch_all` without modifiers.\n\nValid modifiers are `shift`, `ctrl` (alias: `control`), `alt` (alias: `opt`,\n`option`), and `super` (alias: `cmd`, `command`). You may use the modifier\nor the alias. When debugging keybinds, the non-aliased modifier will always\nbe used in output.\n\nNote: The fn or \"globe\" key on keyboards are not supported as a\nmodifier. This is a limitation of the operating systems and GUI toolkits\nthat Ghostty uses.\n\nSome additional notes for triggers:\n\n  * modifiers cannot repeat, `ctrl+ctrl+a` is invalid.\n\n  * modifiers and keys can be in any order, `shift+a+ctrl` is *weird*,\n    but valid.\n\n  * only a single key input is allowed, `ctrl+a+b` is invalid.\n\nYou may also specify multiple triggers separated by `>` to require a\nsequence of triggers to activate the action. For example,\n`ctrl+a>n=new_window` will only trigger the `new_window` action if the\nuser presses `ctrl+a` followed separately by `n`. In other software, this\nis sometimes called a leader key, a key chord, a key table, etc. There\nis no hardcoded limit on the number of parts in a sequence.\n\nWarning: If you define a sequence as a CLI argument to `ghostty`,\nyou probably have to quote the keybind since `>` is a special character\nin most shells. Example: ghostty --keybind='ctrl+a>n=new_window'\n\nA trigger sequence has some special handling:\n\n  * Ghostty will wait an indefinite amount of time for the next key in\n    the sequence. There is no way to specify a timeout. The only way to\n    force the output of a prefix key is to assign another keybind to\n    specifically output that key (e.g. `ctrl+a>ctrl+a=text:foo`) or\n    press an unbound key which will send both keys to the program.\n\n  * If an unbound key is pressed during a sequence and a `catch_all`\n    binding exists that would `ignore` the input, the entire sequence\n    is dropped and nothing happens. Otherwise, the entire sequence is\n    encoded and sent to the running program as if no keybind existed.\n\n  * If a prefix in a sequence is previously bound, the sequence will\n    override the previous binding. For example, if `ctrl+a` is bound to\n    `new_window` and `ctrl+a>n` is bound to `new_tab`, pressing `ctrl+a`\n    will do nothing.\n\n  * Adding to the above, if a previously bound sequence prefix is\n    used in a new, non-sequence binding, the entire previously bound\n    sequence will be unbound. For example, if you bind `ctrl+a>n` and\n    `ctrl+a>t`, and then bind `ctrl+a` directly, both `ctrl+a>n` and\n    `ctrl+a>t` will become unbound.\n\n  * Trigger sequences are not allowed for `global:` or `all:`-prefixed\n    triggers. This is a limitation we could remove in the future.\n\nAction is the action to take when the trigger is satisfied. It takes the\nformat `action` or `action:param`. The latter form is only valid if the\naction requires a parameter.\n\n  * `ignore` - Do nothing, ignore the key input. This can be used to\n    black hole certain inputs to have no effect.\n\n  * `unbind` - Remove the binding. This makes it so the previous action\n    is removed, and the key will be sent through to the child command\n    if it is printable. Unbind will remove any matching trigger,\n    including `physical:`-prefixed triggers without specifying the\n    prefix.\n\n  * `csi:text` - Send a CSI sequence. e.g. `csi:A` sends \"cursor up\".\n\n  * `esc:text` - Send an escape sequence. e.g. `esc:d` deletes to the\n    end of the word to the right.\n\n  * `text:text` - Send a string. Uses Zig string literal syntax.\n    e.g. `text:\\x15` sends Ctrl-U.\n\n  * All other actions can be found in the documentation or by using the\n    `ghostty +list-actions` command.\n\nSome notes for the action:\n\n  * The parameter is taken as-is after the `:`. Double quotes or\n    other mechanisms are included and NOT parsed. If you want to\n    send a string value that includes spaces, wrap the entire\n    trigger/action in double quotes. Example: `--keybind=\"up=csi:A B\"`\n\nThere are some additional special values that can be specified for\nkeybind:\n\n  * `keybind=clear` will clear all set keybindings. Warning: this\n    removes ALL keybindings up to this point, including the default\n    keybindings.\n\nThe keybind trigger can be prefixed with some special values to change\nthe behavior of the keybind. These are:\n\n * `all:`\n\n   Make the keybind apply to all terminal surfaces. By default,\n   keybinds only apply to the focused terminal surface. If this is true,\n   then the keybind will be sent to all terminal surfaces. This only\n   applies to actions that are surface-specific. For actions that\n   are already global (e.g. `quit`), this prefix has no effect.\n\n   Available since: 1.0.0\n\n * `global:`\n\n   Make the keybind global. By default, keybinds only work within Ghostty\n   and under the right conditions (application focused, sometimes terminal\n   focused, etc.). If you want a keybind to work globally across your system\n   (e.g. even when Ghostty is not focused), specify this prefix.\n   This prefix implies `all:`.\n\n   Note: this does not work in all environments; see the additional notes\n   below for more information.\n\n   Available since: 1.0.0 on macOS, 1.2.0 on GTK\n\n * `unconsumed:`\n\n   Do not consume the input. By default, a keybind will consume the input,\n   meaning that the associated encoding (if any) will not be sent to the\n   running program in the terminal. If you wish to send the encoded value\n   to the program, specify the `unconsumed:` prefix before the entire\n   keybind. For example: `unconsumed:ctrl+a=reload_config`. `global:` and\n   `all:`-prefixed keybinds will always consume the input regardless of\n   this setting. Since they are not associated with a specific terminal\n   surface, they're never encoded.\n\n   Available since: 1.0.0\n\n * `performable:`\n\n   Only consume the input if the action is able to be performed.\n   For example, the `copy_to_clipboard` action will only consume the input\n   if there is a selection to copy. If there is no selection, Ghostty\n   behaves as if the keybind was not set. This has no effect with `global:`\n   or `all:`-prefixed keybinds. For key sequences, this will reset the\n   sequence if the action is not performable (acting identically to not\n   having a keybind set at all).\n\n   Performable keybinds will not appear as menu shortcuts in the\n   application menu. This is because the menu shortcuts force the\n   action to be performed regardless of the state of the terminal.\n   Performable keybinds will still work, they just won't appear as\n   a shortcut label in the menu.\n\n   Available since: 1.1.0\n\nKeybind triggers are not unique per prefix combination. For example,\n`ctrl+a` and `global:ctrl+a` are not two separate keybinds. The keybind\nset later will overwrite the keybind set earlier. In this case, the\n`global:` keybind will be used.\n\nMultiple prefixes can be specified. For example,\n`global:unconsumed:ctrl+a=reload_config` will make the keybind global\nand not consume the input to reload the config.\n\nNote: `global:` is only supported on macOS and certain Linux platforms.\n\nOn macOS, this feature requires accessibility permissions to be granted\nto Ghostty. When a `global:` keybind is specified and Ghostty is launched\nor reloaded, Ghostty will attempt to request these permissions.\nIf the permissions are not granted, the keybind will not work. On macOS,\nyou can find these permissions in System Preferences -> Privacy & Security\n-> Accessibility.\n\nOn Linux, you need a desktop environment that implements the\n[Global Shortcuts](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.GlobalShortcuts.html)\nprotocol as a part of its XDG desktop protocol implementation.\nDesktop environments that are known to support (or not support)\nglobal shortcuts include:\n\n - Users using KDE Plasma (since [5.27](https://kde.org/announcements/plasma/5/5.27.0/#wayland))\n   and GNOME (since [48](https://release.gnome.org/48/#and-thats-not-all)) should be able\n   to use global shortcuts with little to no configuration.\n\n - Some manual configuration is required on Hyprland. Consult the steps\n   outlined on the [Hyprland Wiki](https://wiki.hyprland.org/Configuring/Binds/#dbus-global-shortcuts)\n   to set up global shortcuts correctly.\n   (Important: [`xdg-desktop-portal-hyprland`](https://wiki.hyprland.org/Hypr-Ecosystem/xdg-desktop-portal-hyprland/)\n   must also be installed!)\n\n - Notably, global shortcuts have not been implemented on wlroots-based\n   compositors like Sway (see [upstream issue](https://github.com/emersion/xdg-desktop-portal-wlr/issues/240)).\n\n## Chained Actions\n\nA keybind can have multiple actions by using the `chain` keyword for\nsubsequent actions. When a keybind is activated, all chained actions are\nexecuted in order. The syntax is:\n\n```ini\nkeybind = ctrl+a=new_window\nkeybind = chain=goto_split:left\n```\n\nThis binds `ctrl+a` to first open a new window, then move focus to the\nleft split. Each `chain` entry appends an action to the most recently\ndefined keybind. You can chain as many actions as you want:\n\n```ini\nkeybind = ctrl+a=new_window\nkeybind = chain=goto_split:left\nkeybind = chain=toggle_fullscreen\n```\n\nChained actions cannot have prefixes like `global:` or `unconsumed:`.\nThe flags from the original keybind apply to the entire chain.\n\nChained actions work with key sequences as well. For example:\n\n```ini\nkeybind = ctrl+a>n=new_window\nkeybind = chain=goto_split:left\n````\n\nChains with key sequences apply to the most recent binding in the\nsequence.\n\nChained keybinds are available since Ghostty 1.3.0.\n\n## Key Tables\n\nYou may also create a named set of keybindings known as a \"key table.\"\nA key table must be explicitly activated for the bindings to become\navailable. This can be used to implement features such as a\n\"copy mode\", \"vim mode\", etc. Generically, this can implement modal\nkeyboard input.\n\nKey tables are defined using the syntax `<table>/<binding>`. The\n`<binding>` value is everything documented above for keybinds. The\n`<table>` value is the name of the key table. Table names can contain\nanything except `/`, `=`, `+`, and `>`. The characters `+` and `>` are\nreserved for keybind syntax (modifier combinations and key sequences).\nFor example `foo/ctrl+a=new_window` defines a binding within a table\nnamed `foo`.\n\nTables are activated and deactivated using the binding actions\n`activate_key_table:<name>` and `deactivate_key_table`. Other table\nrelated binding actions also exist; see the documentation for a full list.\nThese are the primary way to interact with key tables.\n\nBinding lookup proceeds from the innermost table outward, so keybinds in\nthe default table remain available unless explicitly unbound in an inner\ntable.\n\nA key table has some special syntax and handling:\n\n  * `<name>/` (with no binding) defines and clears a table, resetting all\n    of its keybinds and settings.\n\n  * You cannot activate a table that is already the innermost table; such\n    attempts are ignored. However, the same table can appear multiple times\n    in the stack as long as it is not innermost (e.g., `A -> B -> A -> B`\n    is valid, but `A -> B -> B` is not).\n\n  * A table can be activated in one-shot mode using\n    `activate_key_table_once:<name>`. A one-shot table is automatically\n    deactivated when any non-catch-all binding is invoked.\n\n  * Key sequences work within tables: `foo/ctrl+a>ctrl+b=new_window`.\n    If an invalid key is pressed, the sequence ends but the table remains\n    active.\n\n  * Chain actions work within tables, the `chain` keyword applies to\n    the most recently defined binding in the table. e.g. if you set\n    `table/ctrl+a=new_window` you can chain by using `chain=text:hello`.\n    Important: chain itself doesn't get prefixed with the table name,\n    since it applies to the most recent binding in any table.\n\n  * Prefixes like `global:` work within tables:\n    `foo/global:ctrl+a=new_window`.\n\nKey tables are available since Ghostty 1.3.0.",
+    "default_value": "super+shift+,=reload_config",
     "option_type": "keybind",
     "valid_values": [
       "ignore",
@@ -1635,6 +1928,22 @@
       "key-mapping",
       "keybind",
       "keyboard-shortcut"
+    ],
+    "related_options": null
+  },
+  {
+    "name": "key-remap",
+    "description": "Remap modifier keys within Ghostty. This allows you to swap or reassign\nmodifier keys at the application level without affecting system-wide\nsettings.\n\nThe format is `from=to` where both `from` and `to` are modifier key names.\nYou can use generic names like `ctrl`, `alt`, `shift`, `super` (macOS:\n`cmd`/`command`) or sided names like `left_ctrl`, `right_alt`, etc.\n\nThis will NOT change keyboard layout or key encodings outside of Ghostty.\nFor example, on macOS, `option+a` may still produce `\u00e5` even if `option` is\nremapped to `ctrl`. Desktop environments usually handle key layout long\nbefore Ghostty receives the key events.\n\nExample:\n\n    key-remap = ctrl=super\n    key-remap = left_control=right_alt\n\nImportant notes:\n\n* This is a one-way remap. If you remap `ctrl=super`, then the physical\n  Ctrl key acts as Super, but the Super key remains Super.\n\n* Remaps are not transitive. If you remap `ctrl=super` and `alt=ctrl`,\n  pressing Alt will produce Ctrl, NOT Super.\n\n* This affects both keybind matching and terminal input encoding.\n  This does NOT impact keyboard layout or how keys are interpreted\n  prior to Ghostty receiving them. For example, `option+a` on macOS\n  may still produce `\u00e5` even if `option` is remapped to `ctrl`.\n\n* Generic modifiers (e.g. `ctrl`) match both left and right physical keys.\n  Use sided names (e.g. `left_ctrl`) to remap only one side.\n\nThere are other edge case scenarios that may not behave as expected\nbut are working as intended the way this feature is designed:\n\n* On macOS, bindings in the main menu will trigger before any remapping\n  is done. This is because macOS itself handles menu activation and\n  this happens before Ghostty receives the key event. To workaround\n  this, you should unbind the menu items and rebind them using your\n  desired modifier.\n\nThis configuration can be repeated to specify multiple remaps.",
+    "default_value": "",
+    "option_type": "string",
+    "valid_values": null,
+    "category": "keybind",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": true,
+    "search_terms": [
+      "key",
+      "remap"
     ],
     "related_options": null
   },
@@ -1759,7 +2068,7 @@
   },
   {
     "name": "window-inherit-working-directory",
-    "description": "If true, new windows and tabs will inherit the working directory of the\npreviously focused window. If no window was previously focused, the default\nworking directory will be used (the `working-directory` option).",
+    "description": "If true, new windows will inherit the working directory of the\npreviously focused window. If no window was previously focused, the default\nworking directory will be used (the `working-directory` option).",
     "default_value": "true",
     "option_type": "boolean",
     "valid_values": null,
@@ -1771,6 +2080,42 @@
       "directory",
       "inherit",
       "window",
+      "working"
+    ],
+    "related_options": null
+  },
+  {
+    "name": "tab-inherit-working-directory",
+    "description": "If true, new tabs will inherit the working directory of the\npreviously focused tab. If no tab was previously focused, the default\nworking directory will be used (the `working-directory` option).",
+    "default_value": "true",
+    "option_type": "boolean",
+    "valid_values": null,
+    "category": "window",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "directory",
+      "inherit",
+      "tab",
+      "working"
+    ],
+    "related_options": null
+  },
+  {
+    "name": "split-inherit-working-directory",
+    "description": "If true, new split panes will inherit the working directory of the\npreviously focused split. If no split was previously focused, the default\nworking directory will be used (the `working-directory` option).",
+    "default_value": "true",
+    "option_type": "boolean",
+    "valid_values": null,
+    "category": "window",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "directory",
+      "inherit",
+      "split",
       "working"
     ],
     "related_options": null
@@ -1830,7 +2175,7 @@
   },
   {
     "name": "window-title-font-family",
-    "description": "The font that will be used for the application's window and tab titles.\n\nIf this setting is left unset, the system default font will be used.\n\nNote: any font available on the system may be used, this font is not\nrequired to be a fixed-width font.\n\nAvailable since: 1.1.0 (on GTK)",
+    "description": "The font that will be used for the application's window and tab titles.\n\nIf this setting is left unset, the system default font will be used.\n\nNote: any font available on the system may be used, this font is not\nrequired to be a fixed-width font.\n\nAvailable since: 1.0.0 on macOS, 1.1.0 on GTK",
     "default_value": "",
     "option_type": "string",
     "valid_values": null,
@@ -1876,7 +2221,7 @@
   },
   {
     "name": "window-theme",
-    "description": "The theme to use for the windows. Valid values:\n\n  * `auto` - Determine the theme based on the configured terminal\n     background color. This has no effect if the \"theme\" configuration\n     has separate light and dark themes. In that case, the behavior\n     of \"auto\" is equivalent to \"system\".\n  * `system` - Use the system theme.\n  * `light` - Use the light theme regardless of system theme.\n  * `dark` - Use the dark theme regardless of system theme.\n  * `ghostty` - Use the background and foreground colors specified in the\n    Ghostty configuration. This is only supported on Linux builds.\n\nOn macOS, if `macos-titlebar-style` is \"tabs\", the window theme will be\nautomatically set based on the luminosity of the terminal background color.\nThis only applies to terminal windows. This setting will still apply to\nnon-terminal windows within Ghostty.\n\nThis is currently only supported on macOS and Linux.",
+    "description": "The theme to use for the windows. Valid values:\n\n  * `auto` - Determine the theme based on the configured terminal\n     background color. This has no effect if the \"theme\" configuration\n     has separate light and dark themes. In that case, the behavior\n     of \"auto\" is equivalent to \"system\".\n  * `system` - Use the system theme.\n  * `light` - Use the light theme regardless of system theme.\n  * `dark` - Use the dark theme regardless of system theme.\n  * `ghostty` - Use the background and foreground colors specified in the\n    Ghostty configuration. This is only supported on Linux builds.\n\nOn macOS, if `macos-titlebar-style` is `tabs` or `transparent`, the window theme will be\nautomatically set based on the luminosity of the terminal background color.\nThis only applies to terminal windows. This setting will still apply to\nnon-terminal windows within Ghostty.\n\nThis is currently only supported on macOS and Linux.",
     "default_value": "auto",
     "option_type": "enum",
     "valid_values": [
@@ -2262,6 +2607,7 @@
       "read"
     ],
     "related_options": [
+      "clipboard-codepoint-map",
       "clipboard-write",
       "clipboard-trim-trailing-spaces",
       "clipboard-paste-protection",
@@ -2288,6 +2634,7 @@
       "write"
     ],
     "related_options": [
+      "clipboard-codepoint-map",
       "clipboard-read",
       "clipboard-trim-trailing-spaces",
       "clipboard-paste-protection",
@@ -2296,7 +2643,7 @@
   },
   {
     "name": "clipboard-trim-trailing-spaces",
-    "description": "Trims trailing whitespace on data that is copied to the clipboard. This does\nnot affect data sent to the clipboard via `clipboard-write`.",
+    "description": "Trims trailing whitespace on data that is copied to the clipboard. This does\nnot affect data sent to the clipboard via `clipboard-write`. This only\napplies to trailing whitespace on lines that have other characters.\nCompletely blank lines always have their whitespace trimmed.",
     "default_value": "true",
     "option_type": "boolean",
     "valid_values": null,
@@ -2460,7 +2807,7 @@
   },
   {
     "name": "config-default-files",
-    "description": "When this is true, the default configuration file paths will be loaded.\nThe default configuration file paths are currently only the XDG\nconfig path ($XDG_CONFIG_HOME/ghostty/config).\n\nIf this is false, the default configuration paths will not be loaded.\nThis is targeted directly at using Ghostty from the CLI in a way\nthat minimizes external effects.\n\nThis is a CLI-only configuration. Setting this in a configuration file\nwill have no effect. It is not an error, but it will not do anything.\nThis configuration can only be set via CLI arguments.",
+    "description": "When this is true, the default configuration file paths will be loaded.\nThe default configuration file paths are currently only the XDG\nconfig path ($XDG_CONFIG_HOME/ghostty/config.ghostty).\n\nIf this is false, the default configuration paths will not be loaded.\nThis is targeted directly at using Ghostty from the CLI in a way\nthat minimizes external effects.\n\nThis is a CLI-only configuration. Setting this in a configuration file\nwill have no effect. It is not an error, but it will not do anything.\nThis configuration can only be set via CLI arguments.",
     "default_value": "true",
     "option_type": "boolean",
     "valid_values": null,
@@ -2764,7 +3111,7 @@
   },
   {
     "name": "shell-integration",
-    "description": "Whether to enable shell integration auto-injection or not. Shell integration\ngreatly enhances the terminal experience by enabling a number of features:\n\n  * Working directory reporting so new tabs, splits inherit the\n    previous terminal's working directory.\n\n  * Prompt marking that enables the \"jump_to_prompt\" keybinding.\n\n  * If you're sitting at a prompt, closing a terminal will not ask\n    for confirmation.\n\n  * Resizing the window with a complex prompt usually paints much\n    better.\n\nAllowable values are:\n\n  * `none` - Do not do any automatic injection. You can still manually\n    configure your shell to enable the integration.\n\n  * `detect` - Detect the shell based on the filename.\n\n  * `bash`, `elvish`, `fish`, `zsh` - Use this specific shell injection scheme.\n\nThe default value is `detect`.",
+    "description": "Whether to enable shell integration auto-injection or not. Shell integration\ngreatly enhances the terminal experience by enabling a number of features:\n\n  * Working directory reporting so new tabs, splits inherit the\n    previous terminal's working directory.\n\n  * Prompt marking that enables the \"jump_to_prompt\" keybinding.\n\n  * If you're sitting at a prompt, closing a terminal will not ask\n    for confirmation.\n\n  * Resizing the window with a complex prompt usually paints much\n    better.\n\nAllowable values are:\n\n  * `none` - Do not do any automatic injection. You can still manually\n    configure your shell to enable the integration.\n\n  * `detect` - Detect the shell based on the filename.\n\n  * `bash`, `elvish`, `fish`, `nushell`, `zsh` - Use this specific shell injection scheme.\n\nThe default value is `detect`.",
     "default_value": "detect",
     "option_type": "enum",
     "valid_values": [
@@ -2773,6 +3120,7 @@
       "bash",
       "elvish",
       "fish",
+      "nushell",
       "zsh"
     ],
     "category": "shell-integration",
@@ -2791,7 +3139,7 @@
   },
   {
     "name": "shell-integration-features",
-    "description": "Shell integration features to enable. These require our shell integration\nto be loaded, either automatically via shell-integration or manually.\n\nThe format of this is a list of features to enable separated by commas. If\nyou prefix a feature with `no-` then it is disabled. If you omit a feature,\nits default value is used, so you must explicitly disable features you don't\nwant. You can also use `true` or `false` to turn all features on or off.\n\nExample: `cursor`, `no-cursor`, `sudo`, `no-sudo`, `title`, `no-title`\n\nAvailable features:\n\n  * `cursor` - Set the cursor to a blinking bar at the prompt.\n\n  * `sudo` - Set sudo wrapper to preserve terminfo.\n\n  * `title` - Set the window title via shell integration.\n\n  * `ssh-env` - Enable SSH environment variable compatibility. Automatically\n    converts TERM from `xterm-ghostty` to `xterm-256color` when connecting to\n    remote hosts and propagates COLORTERM, TERM_PROGRAM, and TERM_PROGRAM_VERSION.\n    Whether or not these variables will be accepted by the remote host(s) will\n    depend on whether or not the variables are allowed in their sshd_config.\n    (Available since: 1.2.0)\n\n  * `ssh-terminfo` - Enable automatic terminfo installation on remote hosts.\n    Attempts to install Ghostty's terminfo entry using `infocmp` and `tic` when\n    connecting to hosts that lack it. Requires `infocmp` to be available locally\n    and `tic` to be available on remote hosts. Once terminfo is installed on a\n    remote host, it will be automatically \"cached\" to avoid repeat installations.\n    If desired, the `+ssh-cache` CLI action can be used to manage the installation\n    cache manually using various arguments.\n    (Available since: 1.2.0)\n\n  * `path` - Add Ghostty's binary directory to PATH. This ensures the `ghostty`\n    command is available in the shell even if shell init scripts reset PATH.\n    This is particularly useful on macOS where PATH is often overridden by\n    system scripts. The directory is only added if not already present.\n\nSSH features work independently and can be combined for optimal experience:\nwhen both `ssh-env` and `ssh-terminfo` are enabled, Ghostty will install its\nterminfo on remote hosts and use `xterm-ghostty` as TERM, falling back to\n`xterm-256color` with environment variables if terminfo installation fails.",
+    "description": "Shell integration features to enable. These require our shell integration\nto be loaded, either automatically via shell-integration or manually.\n\nThe format of this is a list of features to enable separated by commas. If\nyou prefix a feature with `no-` then it is disabled. If you omit a feature,\nits default value is used, so you must explicitly disable features you don't\nwant. You can also use `true` or `false` to turn all features on or off.\n\nExample: `cursor`, `no-cursor`, `sudo`, `no-sudo`, `title`, `no-title`\n\nAvailable features:\n\n  * `cursor` - Set the cursor to a bar at the prompt.\n\n  * `sudo` - Set sudo wrapper to preserve terminfo.\n\n  * `title` - Set the window title via shell integration.\n\n  * `ssh-env` - Enable SSH environment variable compatibility. Automatically\n    converts TERM from `xterm-ghostty` to `xterm-256color` when connecting to\n    remote hosts and propagates COLORTERM, TERM_PROGRAM, and TERM_PROGRAM_VERSION.\n    Whether or not these variables will be accepted by the remote host(s) will\n    depend on whether or not the variables are allowed in their sshd_config.\n    (Available since: 1.2.0)\n\n  * `ssh-terminfo` - Enable automatic terminfo installation on remote hosts.\n    Attempts to install Ghostty's terminfo entry using `infocmp` and `tic` when\n    connecting to hosts that lack it. Requires `infocmp` to be available locally\n    and `tic` to be available on remote hosts. Once terminfo is installed on a\n    remote host, it will be automatically \"cached\" to avoid repeat installations.\n    If desired, the `+ssh-cache` CLI action can be used to manage the installation\n    cache manually using various arguments.\n    (Available since: 1.2.0)\n\n  * `path` - Add Ghostty's binary directory to PATH. This ensures the `ghostty`\n    command is available in the shell even if shell init scripts reset PATH.\n    This is particularly useful on macOS where PATH is often overridden by\n    system scripts. The directory is only added if not already present.\n\nSSH features work independently and can be combined for optimal experience:\nwhen both `ssh-env` and `ssh-terminfo` are enabled, Ghostty will install its\nterminfo on remote hosts and use `xterm-ghostty` as TERM, falling back to\n`xterm-256color` with environment variables if terminfo installation fails.",
     "default_value": "cursor,no-sudo,title,no-ssh-env,no-ssh-terminfo,path",
     "option_type": "string",
     "valid_values": [
@@ -2816,7 +3164,7 @@
   {
     "name": "command-palette-entry",
     "description": "Custom entries into the command palette.\n\nEach entry requires the title, the corresponding action, and an optional\ndescription. Each field should be prefixed with the field name, a colon\n(`:`), and then the specified value. The syntax for actions is identical\nto the one for keybind actions. Whitespace in between fields is ignored.\n\nIf you need to embed commas or any other special characters in the values,\nenclose the value in double quotes and it will be interpreted as a Zig\nstring literal. This is also useful for including whitespace at the\nbeginning or the end of a value. See the\n[Zig documentation](https://ziglang.org/documentation/master/#Escape-Sequences)\nfor more information on string literals. Note that multiline string literals\nare not supported.\n\nDouble quotes can not be used around the field names.\n\n```ini\ncommand-palette-entry = title:Reset Font Style, action:csi:0m\ncommand-palette-entry = title:Crash on Main Thread,description:Causes a crash on the main (UI) thread.,action:crash:main\ncommand-palette-entry = title:Focus Split: Right,description:\"Focus the split to the right, if it exists.\",action:goto_split:right\ncommand-palette-entry = title:\"Ghostty\",description:\"Add a little Ghostty to your terminal.\",action:\"text:\\xf0\\x9f\\x91\\xbb\"\n```\n\nBy default, the command palette is preloaded with most actions that might\nbe useful in an interactive setting yet do not have easily accessible or\nmemorizable shortcuts. The default entries can be cleared by setting this\nsetting to an empty value:\n\n```ini\ncommand-palette-entry =\n```\n\nAvailable since: 1.2.0",
-    "default_value": "title:\"Change Title...\",description:\"Prompt for a new title for the current terminal.\",action:\"prompt_surface_title\"",
+    "default_value": "title:\"Change Tab Title\\xe2\\x80\\xa6\",description:\"Prompt for a new title for the current tab.\",action:\"prompt_tab_title\"",
     "option_type": "string",
     "valid_values": null,
     "category": "shell",
@@ -2870,7 +3218,7 @@
   },
   {
     "name": "custom-shader",
-    "description": "Custom shaders to run after the default shaders. This is a file path\nto a GLSL-syntax shader for all platforms.\n\nWarning: Invalid shaders can cause Ghostty to become unusable such as by\ncausing the window to be completely black. If this happens, you can\nunset this configuration to disable the shader.\n\nCustom shader support is based on and compatible with the Shadertoy shaders.\nShaders should specify a `mainImage` function and the available uniforms\nlargely match Shadertoy, with some caveats and Ghostty-specific extensions.\n\nThe uniform values available to shaders are as follows:\n\n * `sampler2D iChannel0` - Input texture.\n\n   A texture containing the current terminal screen. If multiple custom\n   shaders are specified, the output of previous shaders is written to\n   this texture, to allow combining multiple effects.\n\n * `vec3 iResolution` - Output texture size, `[width, height, 1]` (in px).\n\n * `float iTime` - Time in seconds since first frame was rendered.\n\n * `float iTimeDelta` - Time in seconds since previous frame was rendered.\n\n * `float iFrameRate` - Average framerate. (NOT CURRENTLY SUPPORTED)\n\n * `int iFrame` - Number of frames that have been rendered so far.\n\n * `float iChannelTime[4]` - Current time for video or sound input. (N/A)\n\n * `vec3 iChannelResolution[4]` - Resolutions of the 4 input samplers.\n\n   Currently only `iChannel0` exists, and `iChannelResolution[0]` is\n   identical to `iResolution`.\n\n * `vec4 iMouse` - Mouse input info. (NOT CURRENTLY SUPPORTED)\n\n * `vec4 iDate` - Date/time info. (NOT CURRENTLY SUPPORTED)\n\n * `float iSampleRate` - Sample rate for audio. (N/A)\n\nGhostty-specific extensions:\n\n * `vec4 iCurrentCursor` - Info about the terminal cursor.\n\n   - `iCurrentCursor.xy` is the -X, +Y corner of the current cursor.\n   - `iCurrentCursor.zw` is the width and height of the current cursor.\n\n * `vec4 iPreviousCursor` - Info about the previous terminal cursor.\n\n * `vec4 iCurrentCursorColor` - Color of the terminal cursor.\n\n * `vec4 iPreviousCursorColor` - Color of the previous terminal cursor.\n\n * `float iTimeCursorChange` - Timestamp of terminal cursor change.\n\n   When the terminal cursor changes position or color, this is set to\n   the same time as the `iTime` uniform, allowing you to compute the\n   time since the change by subtracting this from `iTime`.\n\nIf the shader fails to compile, the shader will be ignored. Any errors\nrelated to shader compilation will not show up as configuration errors\nand only show up in the log, since shader compilation happens after\nconfiguration loading on the dedicated render thread.  For interactive\ndevelopment, use [shadertoy.com](https://shadertoy.com).\n\nThis can be repeated multiple times to load multiple shaders. The shaders\nwill be run in the order they are specified.\n\nThis can be changed at runtime and will affect all open terminals.",
+    "description": "Custom shaders to run after the default shaders. This is a file path\nto a GLSL-syntax shader for all platforms.\n\nWarning: Invalid shaders can cause Ghostty to become unusable such as by\ncausing the window to be completely black. If this happens, you can\nunset this configuration to disable the shader.\n\nCustom shader support is based on and compatible with the Shadertoy shaders.\nShaders should specify a `mainImage` function and the available uniforms\nlargely match Shadertoy, with some caveats and Ghostty-specific extensions.\n\nThe uniform values available to shaders are as follows:\n\n * `sampler2D iChannel0` - Input texture.\n\n   A texture containing the current terminal screen. If multiple custom\n   shaders are specified, the output of previous shaders is written to\n   this texture, to allow combining multiple effects.\n\n * `vec3 iResolution` - Output texture size, `[width, height, 1]` (in px).\n\n * `float iTime` - Time in seconds since first frame was rendered.\n\n * `float iTimeDelta` - Time in seconds since previous frame was rendered.\n\n * `float iFrameRate` - Average framerate. (NOT CURRENTLY SUPPORTED)\n\n * `int iFrame` - Number of frames that have been rendered so far.\n\n * `float iChannelTime[4]` - Current time for video or sound input. (N/A)\n\n * `vec3 iChannelResolution[4]` - Resolutions of the 4 input samplers.\n\n   Currently only `iChannel0` exists, and `iChannelResolution[0]` is\n   identical to `iResolution`.\n\n * `vec4 iMouse` - Mouse input info. (NOT CURRENTLY SUPPORTED)\n\n * `vec4 iDate` - Date/time info. (NOT CURRENTLY SUPPORTED)\n\n * `float iSampleRate` - Sample rate for audio. (N/A)\n\nGhostty-specific extensions:\n\n * `vec4 iCurrentCursor` - Info about the terminal cursor.\n\n   - `iCurrentCursor.xy` is the -X, +Y corner of the current cursor.\n   - `iCurrentCursor.zw` is the width and height of the current cursor.\n\n * `vec4 iPreviousCursor` - Info about the previous terminal cursor.\n\n * `vec4 iCurrentCursorColor` - Color of the terminal cursor.\n\n * `vec4 iPreviousCursorColor` - Color of the previous terminal cursor.\n\n * `vec4 iCurrentCursorStyle` - Style of the terminal cursor\n\n   Macros simplified use are defined for the various cursor styles:\n\n   - `CURSORSTYLE_BLOCK` or `0`\n   - `CURSORSTYLE_BLOCK_HOLLOW` or `1`\n   - `CURSORSTYLE_BAR` or `2`\n   - `CURSORSTYLE_UNDERLINE` or `3`\n   - `CURSORSTYLE_LOCK` or `4`\n\n * `vec4 iPreviousCursorStyle` - Style of the previous terminal cursor\n\n * `vec4 iCursorVisible` - Visibility of the terminal cursor.\n\n * `float iTimeCursorChange` - Timestamp of terminal cursor change.\n\n   When the terminal cursor changes position or color, this is set to\n   the same time as the `iTime` uniform, allowing you to compute the\n   time since the change by subtracting this from `iTime`.\n\n * `float iTimeFocus` - Timestamp when the surface last gained iFocus.\n\n   When the surface gains focus, this is set to the current value of\n   `iTime`, similar to how `iTimeCursorChange` works. This allows you\n   to compute the time since focus was gained or lost by calculating\n   `iTime - iTimeFocus`. Use this to create animations that restart\n   when the terminal regains focus.\n\n * `int iFocus` - Current focus state of the surface.\n\n   Set to 1.0 when the surface is focused, 0.0 when unfocused. This\n   allows shaders to detect unfocused state and avoid animation artifacts\n   from large time deltas caused by infrequent \"deceptive frames\"\n   (e.g., modifier key presses, link hover events in unfocused split panes).\n   Check `iFocus > 0` to determine if the surface is currently focused.\n\n * `vec3 iPalette[256]` - The 256-color terminal palette.\n\n   RGB values for all 256 colors in the terminal palette, normalized\n   to [0.0, 1.0]. Index 0-15 are the ANSI colors, 16-231 are the 6x6x6\n   color cube, and 232-255 are the grayscale colors.\n\n * `vec3 iBackgroundColor` - Terminal background color (RGB).\n\n * `vec3 iForegroundColor` - Terminal foreground color (RGB).\n\n * `vec3 iCursorColor` - Terminal cursor color (RGB).\n\n * `vec3 iCursorText` - Terminal cursor text color (RGB).\n\n * `vec3 iSelectionBackgroundColor` - Selection background color (RGB).\n\n * `vec3 iSelectionForegroundColor` - Selection foreground color (RGB).\n\nIf the shader fails to compile, the shader will be ignored. Any errors\nrelated to shader compilation will not show up as configuration errors\nand only show up in the log, since shader compilation happens after\nconfiguration loading on the dedicated render thread.  For interactive\ndevelopment, use [shadertoy.com](https://shadertoy.com).\n\nThis can be repeated multiple times to load multiple shaders. The shaders\nwill be run in the order they are specified.\n\nThis can be changed at runtime and will affect all open terminals.",
     "default_value": "",
     "option_type": "string",
     "valid_values": null,
@@ -2908,7 +3256,7 @@
   },
   {
     "name": "bell-features",
-    "description": "Bell features to enable if bell support is available in your runtime. Not\nall features are available on all runtimes. The format of this is a list of\nfeatures to enable separated by commas. If you prefix a feature with `no-`\nthen it is disabled. If you omit a feature, its default value is used.\n\nValid values are:\n\n * `system`\n\n   Instruct the system to notify the user using built-in system functions.\n   This could result in an audiovisual effect, a notification, or something\n   else entirely. Changing these effects require altering system settings:\n   for instance under the \"Sound > Alert Sound\" setting in GNOME,\n   or the \"Accessibility > System Bell\" settings in KDE Plasma. (GTK only)\n\n * `audio`\n\n   Play a custom sound. (GTK only)\n\n * `attention` *(enabled by default)*\n\n   Request the user's attention when Ghostty is unfocused, until it has\n   received focus again. On macOS, this will bounce the app icon in the\n   dock once. On Linux, the behavior depends on the desktop environment\n   and/or the window manager/compositor:\n\n   - On KDE, the background of the desktop icon in the task bar would be\n     highlighted;\n\n   - On GNOME, you may receive a notification that, when clicked, would\n     bring the Ghostty window into focus;\n\n   - On Sway, the window may be decorated with a distinctly colored border;\n\n   - On other systems this may have no effect at all.\n\n * `title` *(enabled by default)*\n\n   Prepend a bell emoji (\ud83d\udd14) to the title of the alerted surface until the\n   terminal is re-focused or interacted with (such as on keyboard input).\n\n * `border`\n\n   Display a border around the alerted surface until the terminal is\n   re-focused or interacted with (such as on keyboard input).\n\n   GTK only.\n\nExample: `audio`, `no-audio`, `system`, `no-system`\n\nAvailable since: 1.2.0",
+    "description": "Bell features to enable if bell support is available in your runtime. Not\nall features are available on all runtimes. The format of this is a list of\nfeatures to enable separated by commas. If you prefix a feature with `no-`\nthen it is disabled. If you omit a feature, its default value is used.\n\nValid values are:\n\n * `system`\n\n   Instruct the system to notify the user using built-in system functions.\n   This could result in an audiovisual effect, a notification, or something\n   else entirely. Changing these effects require altering system settings:\n   for instance under the \"Sound > Alert Sound\" setting in GNOME,\n   or the \"Accessibility > System Bell\" settings in KDE Plasma.\n\n   On macOS, this plays the system alert sound.\n\n * `audio`\n\n   Play a custom sound. (Available since 1.3.0 on macOS)\n\n * `attention` *(enabled by default)*\n\n   Request the user's attention when Ghostty is unfocused, until it has\n   received focus again. On macOS, this will bounce the app icon in the\n   dock once. On Linux, the behavior depends on the desktop environment\n   and/or the window manager/compositor:\n\n   - On KDE, the background of the desktop icon in the task bar would be\n     highlighted;\n\n   - On GNOME, you may receive a notification that, when clicked, would\n     bring the Ghostty window into focus;\n\n   - On Sway, the window may be decorated with a distinctly colored border;\n\n   - On other systems this may have no effect at all.\n\n * `title` *(enabled by default)*\n\n   Prepend a bell emoji (\ud83d\udd14) to the title of the alerted surface until the\n   terminal is re-focused or interacted with (such as on keyboard input).\n\n * `border`\n\n   Display a border around the alerted surface until the terminal is\n   re-focused or interacted with (such as on keyboard input).\n\n   Available since: 1.2.0 on GTK, 1.2.1 on macOS\n\nExample: `audio`, `no-audio`, `system`, `no-system`\n\nAvailable since: 1.2.0",
     "default_value": "no-system,no-audio,attention,title,no-border",
     "option_type": "string",
     "valid_values": [
@@ -2933,7 +3281,7 @@
   },
   {
     "name": "bell-audio-path",
-    "description": "If `audio` is an enabled bell feature, this is a path to an audio file. If\nthe path is not absolute, it is considered relative to the directory of the\nconfiguration file that it is referenced from, or from the current working\ndirectory if this is used as a CLI flag. The path may be prefixed with `~/`\nto reference the user's home directory. (GTK only)\n\nAvailable since: 1.2.0",
+    "description": "If `audio` is an enabled bell feature, this is a path to an audio file. If\nthe path is not absolute, it is considered relative to the directory of the\nconfiguration file that it is referenced from, or from the current working\ndirectory if this is used as a CLI flag. The path may be prefixed with `~/`\nto reference the user's home directory.\n\nAvailable since: 1.2.0 on GTK, 1.3.0 on macOS.",
     "default_value": "",
     "option_type": "path",
     "valid_values": null,
@@ -2952,7 +3300,7 @@
   },
   {
     "name": "bell-audio-volume",
-    "description": "If `audio` is an enabled bell feature, this is the volume to play the audio\nfile at (relative to the system volume). This is a floating point number\nranging from 0.0 (silence) to 1.0 (as loud as possible). The default is 0.5.\n(GTK only)\n\nAvailable since: 1.2.0",
+    "description": "If `audio` is an enabled bell feature, this is the volume to play the audio\nfile at (relative to the system volume). This is a floating point number\nranging from 0.0 (silence) to 1.0 (as loud as possible). The default is 0.5.\n\nAvailable since: 1.2.0 on GTK, 1.3.0 on macOS.",
     "default_value": "0.5",
     "option_type": "number",
     "valid_values": null,
@@ -3007,7 +3355,7 @@
   },
   {
     "name": "macos-window-buttons",
-    "description": "Whether the window buttons in the macOS titlebar are visible. The window\nbuttons are the colored buttons in the upper left corner of most macOS apps,\nalso known as the traffic lights, that allow you to close, miniaturize, and\nzoom the window.\n\nThis setting has no effect when `window-decoration = false` or\n`macos-titlebar-style = hidden`, as the window buttons are always hidden in\nthese modes.\n\nValid values are:\n\n  * `visible` - Show the window buttons.\n  * `hidden` - Hide the window buttons.\n\nThe default value is `visible`.\n\nChanging this option at runtime only applies to new windows.\n\nAvailable since: 1.2.0",
+    "description": "Whether the window buttons in the macOS titlebar are visible. The window\nbuttons are the colored buttons in the upper left corner of most macOS apps,\nalso known as the traffic lights, that allow you to close, miniaturize, and\nzoom the window.\n\nThis setting has no effect when `window-decoration = none` or\n`macos-titlebar-style = hidden`, as the window buttons are always hidden in\nthese modes.\n\nValid values are:\n\n  * `visible` - Show the window buttons.\n  * `hidden` - Hide the window buttons.\n\nThe default value is `visible`.\n\nChanging this option at runtime only applies to new windows.\n\nAvailable since: 1.2.0",
     "default_value": "visible",
     "option_type": "enum",
     "valid_values": [
@@ -3031,7 +3379,7 @@
   },
   {
     "name": "macos-titlebar-style",
-    "description": "The style of the macOS titlebar. Available values are: \"native\",\n\"transparent\", \"tabs\", and \"hidden\".\n\nThe \"native\" style uses the native macOS titlebar with zero customization.\nThe titlebar will match your window theme (see `window-theme`).\n\nThe \"transparent\" style is the same as \"native\" but the titlebar will\nbe transparent and allow your window background color to come through.\nThis makes a more seamless window appearance but looks a little less\ntypical for a macOS application and may not work well with all themes.\n\nThe \"transparent\" style will also update in real-time to dynamic\nchanges to the window background color, e.g. via OSC 11. To make this\nmore aesthetically pleasing, this only happens if the terminal is\na window, tab, or split that borders the top of the window. This\navoids a disjointed appearance where the titlebar color changes\nbut all the topmost terminals don't match.\n\nThe \"tabs\" style is a completely custom titlebar that integrates the\ntab bar into the titlebar. This titlebar always matches the background\ncolor of the terminal. There are some limitations to this style:\nOn macOS 13 and below, saved window state will not restore tabs correctly.\nmacOS 14 does not have this issue and any other macOS version has not\nbeen tested.\n\nThe \"hidden\" style hides the titlebar. Unlike `window-decoration = false`,\nhowever, it does not remove the frame from the window or cause it to have\nsquared corners. Changing to or from this option at run-time may affect\nexisting windows in buggy ways.\n\nWhen \"hidden\", the top titlebar area can no longer be used for dragging\nthe window. To drag the window, you can use option+click on the resizable\nareas of the frame to drag the window. This is a standard macOS behavior\nand not something Ghostty enables.\n\nThe default value is \"transparent\". This is an opinionated choice\nbut its one I think is the most aesthetically pleasing and works in\nmost cases.\n\nChanging this option at runtime only applies to new windows.",
+    "description": "The style of the macOS titlebar. Available values are: \"native\",\n\"transparent\", \"tabs\", and \"hidden\".\n\nThe \"native\" style uses the native macOS titlebar with zero customization.\nThe titlebar will match your window theme (see `window-theme`).\n\nThe \"transparent\" style is the same as \"native\" but the titlebar will\nbe transparent and allow your window background color to come through.\nThis makes a more seamless window appearance but looks a little less\ntypical for a macOS application and may not work well with all themes.\n\nThe \"transparent\" style will also update in real-time to dynamic\nchanges to the window background color, e.g. via OSC 11. To make this\nmore aesthetically pleasing, this only happens if the terminal is\na window, tab, or split that borders the top of the window. This\navoids a disjointed appearance where the titlebar color changes\nbut all the topmost terminals don't match.\n\nThe \"tabs\" style is a completely custom titlebar that integrates the\ntab bar into the titlebar. This titlebar always matches the background\ncolor of the terminal. There are some limitations to this style:\nOn macOS 13 and below, saved window state will not restore tabs correctly.\nmacOS 14 does not have this issue and any other macOS version has not\nbeen tested.\n\nThe \"hidden\" style hides the titlebar. Unlike `window-decoration = none`,\nhowever, it does not remove the frame from the window or cause it to have\nsquared corners. Changing to or from this option at run-time may affect\nexisting windows in buggy ways.\n\nWhen \"hidden\", the top titlebar area can no longer be used for dragging\nthe window. To drag the window, you can use option+click on the resizable\nareas of the frame to drag the window. This is a standard macOS behavior\nand not something Ghostty enables.\n\nThe default value is \"transparent\". This is an opinionated choice\nbut its one I think is the most aesthetically pleasing and works in\nmost cases.\n\nChanging this option at runtime only applies to new windows.",
     "default_value": "transparent",
     "option_type": "string",
     "valid_values": null,
@@ -3077,12 +3425,12 @@
   },
   {
     "name": "macos-dock-drop-behavior",
-    "description": "Controls the windowing behavior when dropping a file or folder\nonto the Ghostty icon in the macOS dock.\n\nValid values are:\n\n  * `new-tab` - Create a new tab in the current window, or open\n    a new window if none exist.\n  * `window` - Create a new window unconditionally.\n\nThe default value is `new-tab`.\n\nThis setting is only supported on macOS and has no effect on other\nplatforms.",
+    "description": "Controls the windowing behavior when dropping a file or folder\nonto the Ghostty icon in the macOS dock.\n\nValid values are:\n\n  * `new-tab` - Create a new tab in the current window, or open\n    a new window if none exist.\n  * `new-window` - Create a new window unconditionally.\n\nThe default value is `new-tab`.\n\nThis setting is only supported on macOS and has no effect on other\nplatforms.",
     "default_value": "new-tab",
     "option_type": "enum",
     "valid_values": [
       "new-tab",
-      "window"
+      "new-window"
     ],
     "category": "macos",
     "platform": [
@@ -3167,7 +3515,7 @@
       "macos-window-shadow",
       "macos-auto-secure-input",
       "macos-secure-input-indication",
-      "macos-icon"
+      "macos-applescript"
     ]
   },
   {
@@ -3209,6 +3557,35 @@
       "secure"
     ],
     "related_options": null
+  },
+  {
+    "name": "macos-applescript",
+    "description": "If true, Ghostty exposes and handles the built-in AppleScript dictionary\non macOS.\n\nIf false, all AppleScript interactions are disabled. This includes\nAppleScript commands and AppleScript object lookup for windows, tabs,\nand terminals.\n\nThe default is true.",
+    "default_value": "true",
+    "option_type": "boolean",
+    "valid_values": null,
+    "category": "macos",
+    "platform": [
+      "macos"
+    ],
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "applescript",
+      "macos"
+    ],
+    "related_options": [
+      "macos-non-native-fullscreen",
+      "macos-window-buttons",
+      "macos-titlebar-style",
+      "macos-titlebar-proxy-icon",
+      "macos-dock-drop-behavior",
+      "macos-option-as-alt",
+      "macos-window-shadow",
+      "macos-hidden",
+      "macos-auto-secure-input",
+      "macos-secure-input-indication"
+    ]
   },
   {
     "name": "macos-icon",
@@ -3369,7 +3746,7 @@
   },
   {
     "name": "linux-cgroup",
-    "description": "Put every surface (tab, split, window) into a dedicated Linux cgroup.\n\nThis makes it so that resource management can be done on a per-surface\ngranularity. For example, if a shell program is using too much memory,\nonly that shell will be killed by the oom monitor instead of the entire\nGhostty process. Similarly, if a shell program is using too much CPU,\nonly that surface will be CPU-throttled.\n\nThis will cause startup times to be slower (a hundred milliseconds or so),\nso the default value is \"single-instance.\" In single-instance mode, only\none instance of Ghostty is running (see gtk-single-instance) so the startup\ntime is a one-time cost. Additionally, single instance Ghostty is much\nmore likely to have many windows, tabs, etc. so cgroup isolation is a\nbig benefit.\n\nThis feature requires systemd. If systemd is unavailable, cgroup\ninitialization will fail. By default, this will not prevent Ghostty\nfrom working (see linux-cgroup-hard-fail).\n\nValid values are:\n\n  * `never` - Never use cgroups.\n  * `always` - Always use cgroups.\n  * `single-instance` - Enable cgroups only for Ghostty instances launched\n    as single-instance applications (see gtk-single-instance).",
+    "description": "Put every surface (tab, split, window) into a transient `systemd` scope.\n\nThis allows per-surface resource management. For example, if a shell program\nis using too much memory, only that shell will be killed by the oom monitor\ninstead of the entire Ghostty process. Similarly, if a shell program is\nusing too much CPU, only that surface will be CPU-throttled.\n\nThis will cause startup times to be slower (a hundred milliseconds or so),\nso the default value is \"single-instance.\" In single-instance mode, only\none instance of Ghostty is running (see gtk-single-instance) so the startup\ntime is a one-time cost. Additionally, single instance Ghostty is much\nmore likely to have many windows, tabs, etc. so cgroup isolation is a\nbig benefit.\n\nThis feature requires `systemd`. If `systemd` is unavailable, cgroup\ninitialization will fail. By default, this will not prevent Ghostty from\nworking (see `linux-cgroup-hard-fail`).\n\nChanging this value and reloading the config will not affect existing\nsurfaces.\n\nValid values are:\n\n  * `never` - Never use cgroups.\n  * `always` - Always use cgroups.\n  * `single-instance` - Enable cgroups only for Ghostty instances launched\n    as single-instance applications (see gtk-single-instance).",
     "default_value": "never",
     "option_type": "duration",
     "valid_values": null,
@@ -3391,7 +3768,7 @@
   },
   {
     "name": "linux-cgroup-memory-limit",
-    "description": "Memory limit for any individual terminal process (tab, split, window,\netc.) in bytes. If this is unset then no memory limit will be set.\n\nNote that this sets the \"memory.high\" configuration for the memory\ncontroller, which is a soft limit. You should configure something like\nsystemd-oom to handle killing processes that have too much memory\npressure.",
+    "description": "Memory limit for any individual terminal process (tab, split, window,\netc.) in bytes. If this is unset then no memory limit will be set.\n\nNote that this sets the `MemoryHigh` setting on the transient `systemd`\nscope, which is a soft limit. You should configure something like\n`systemd-oom` to handle killing processes that have too much memory\npressure.\n\nChanging this value and reloading the config will not affect existing\nsurfaces.\n\nSee the `systemd.resource-control` manual page for more information:\nhttps://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html",
     "default_value": "",
     "option_type": "string",
     "valid_values": null,
@@ -3411,7 +3788,7 @@
   },
   {
     "name": "linux-cgroup-processes-limit",
-    "description": "Number of processes limit for any individual terminal process (tab, split,\nwindow, etc.). If this is unset then no limit will be set.\n\nNote that this sets the \"pids.max\" configuration for the process number\ncontroller, which is a hard limit.",
+    "description": "Number of processes limit for any individual terminal process (tab, split,\nwindow, etc.). If this is unset then no limit will be set.\n\nNote that this sets the `TasksMax` setting on the transient `systemd` scope,\nwhich is a hard limit.\n\nChanging this value and reloading the config will not affect existing\nsurfaces.\n\nSee the `systemd.resource-control` manual page for more information:\nhttps://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html",
     "default_value": "",
     "option_type": "string",
     "valid_values": null,
@@ -3431,7 +3808,7 @@
   },
   {
     "name": "linux-cgroup-hard-fail",
-    "description": "If this is false, then any cgroup initialization (for linux-cgroup)\nwill be allowed to fail and the failure is ignored. This is useful if\nyou view cgroup isolation as a \"nice to have\" and not a critical resource\nmanagement feature, because Ghostty startup will not fail if cgroup APIs\nfail.\n\nIf this is true, then any cgroup initialization failure will cause\nGhostty to exit or new surfaces to not be created.\n\nNote: This currently only affects cgroup initialization. Subprocesses\nmust always be able to move themselves into an isolated cgroup.",
+    "description": "If this is false, then creating a transient `systemd` scope (for\n`linux-cgroup`) will be allowed to fail and the failure is ignored. This is\nuseful if you view cgroup isolation as a \"nice to have\" and not a critical\nresource management feature, because surface creation will not fail if\n`systemd` APIs fail.\n\nIf this is true, then any transient `systemd` scope creation failure will\ncause surface creation to fail.\n\nChanging this value and reloading the config will not affect existing\nsurfaces.",
     "default_value": "false",
     "option_type": "boolean",
     "valid_values": null,
@@ -3489,7 +3866,7 @@
   },
   {
     "name": "gtk-titlebar",
-    "description": "When enabled, the full GTK titlebar is displayed instead of your window\nmanager's simple titlebar. The behavior of this option will vary with your\nwindow manager.\n\nThis option does nothing when `window-decoration` is false or when running\nunder macOS.",
+    "description": "When enabled, the full GTK titlebar is displayed instead of your window\nmanager's simple titlebar. The behavior of this option will vary with your\nwindow manager.\n\nThis option does nothing when `window-decoration` is none or when running\nunder macOS.",
     "default_value": "true",
     "option_type": "boolean",
     "valid_values": null,
@@ -3581,7 +3958,7 @@
   },
   {
     "name": "gtk-titlebar-style",
-    "description": "The style of the GTK titlbar. Available values are `native` and `tabs`.\n\nThe `native` titlebar style is a traditional titlebar with a title, a few\nbuttons and window controls. A separate tab bar will show up below the\ntitlebar if you have multiple tabs open in the window.\n\nThe `tabs` titlebar merges the tab bar and the traditional titlebar.\nThis frees up vertical space on your screen if you use multiple tabs. One\nlimitation of the `tabs` titlebar is that you cannot drag the titlebar\nby the titles any longer (as they are tab titles now). Other areas of the\n`tabs` title bar can be used to drag the window around.\n\nThe default style is `native`.",
+    "description": "The style of the GTK titlebar. Available values are `native` and `tabs`.\n\nThe `native` titlebar style is a traditional titlebar with a title, a few\nbuttons and window controls. A separate tab bar will show up below the\ntitlebar if you have multiple tabs open in the window.\n\nThe `tabs` titlebar merges the tab bar and the traditional titlebar.\nThis frees up vertical space on your screen if you use multiple tabs. One\nlimitation of the `tabs` titlebar is that you cannot drag the titlebar\nby the titles any longer (as they are tab titles now). Other areas of the\n`tabs` title bar can be used to drag the window around.\n\nThe default style is `native`.",
     "default_value": "native",
     "option_type": "string",
     "valid_values": null,
@@ -3651,6 +4028,22 @@
     "search_terms": [
       "desktop",
       "notifications"
+    ],
+    "related_options": null
+  },
+  {
+    "name": "progress-style",
+    "description": "If `true` (default), applications running in the terminal can show\ngraphical progress bars using the ConEmu OSC 9;4 escape sequence.\nIf `false`, progress bar sequences are silently ignored.",
+    "default_value": "true",
+    "option_type": "boolean",
+    "valid_values": null,
+    "category": "general",
+    "platform": null,
+    "reloadable": true,
+    "repeatable": false,
+    "search_terms": [
+      "progress",
+      "style"
     ],
     "related_options": null
   },
