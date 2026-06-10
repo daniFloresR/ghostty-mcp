@@ -2,7 +2,7 @@ name: Update Ghostty Docs
 
 on:
   schedule:
-    - cron: '0 6 * * *' # Daily at 06:00 UTC
+    - cron: '0 6 * * 1' # Weekly on Monday at 06:00 UTC
   workflow_dispatch:
     inputs:
       force:
@@ -14,12 +14,16 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # Needed to re-enable this workflow (inactivity keepalive) and to
+  # dispatch CI on the auto-created PR branch.
+  actions: write
 
 jobs:
   update-docs:
     runs-on: macos-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Read current version
         id: current
@@ -42,11 +46,11 @@ jobs:
 
       - name: Check if update needed
         id: check
+        env:
+          CURRENT: ${{ steps.current.outputs.version }}
+          LATEST: ${{ steps.latest.outputs.version }}
+          FORCE: ${{ inputs.force }}
         run: |
-          CURRENT="${{ steps.current.outputs.version }}"
-          LATEST="${{ steps.latest.outputs.version }}"
-          FORCE="${{ inputs.force }}"
-
           if [ "$CURRENT" = "$LATEST" ] && [ "$FORCE" != "true" ]; then
             echo "Version $CURRENT is already up to date"
             echo "skip=true" >> "$GITHUB_OUTPUT"
@@ -60,8 +64,8 @@ jobs:
         id: pr_check
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LATEST: ${{ steps.latest.outputs.version }}
         run: |
-          LATEST="${{ steps.latest.outputs.version }}"
           BRANCH="auto/update-ghostty-docs-v${LATEST}"
           EXISTING=$(gh pr list --head "$BRANCH" --state open --json number --jq 'length')
           if [ "$EXISTING" -gt 0 ]; then
@@ -102,23 +106,25 @@ jobs:
 
       - name: Update version file
         if: steps.check.outputs.skip == 'false' && steps.pr_check.outputs.skip == 'false'
+        env:
+          LATEST: ${{ steps.latest.outputs.version }}
         run: |
-          echo "${{ steps.latest.outputs.version }}" > data/ghostty-version.txt
+          echo "$LATEST" > data/ghostty-version.txt
 
       - name: Build and test
         if: steps.check.outputs.skip == 'false' && steps.pr_check.outputs.skip == 'false'
         run: |
-          rustup toolchain install stable --profile minimal --component clippy
-          cargo clippy --all-targets -- -D warnings
-          cargo test --verbose
+          rustup toolchain install
+          cargo clippy --all-targets --locked -- -D warnings
+          cargo test --locked --verbose
 
       - name: Generate diff summary
         if: steps.check.outputs.skip == 'false' && steps.pr_check.outputs.skip == 'false'
         id: diff
+        env:
+          CURRENT: ${{ steps.current.outputs.version }}
+          LATEST: ${{ steps.latest.outputs.version }}
         run: |
-          CURRENT="${{ steps.current.outputs.version }}"
-          LATEST="${{ steps.latest.outputs.version }}"
-
           # Extract option names from old and new JSON
           git show HEAD:data/ghostty-options.json | python3 -c "import json,sys; [print(o['name']) for o in json.load(sys.stdin)]" | sort > /tmp/old_options.txt
           python3 -c "import json; [print(o['name']) for o in json.load(open('data/ghostty-options.json'))]" | sort > /tmp/new_options.txt
@@ -129,9 +135,9 @@ jobs:
           OLD_COUNT=$(git show HEAD:data/ghostty-options.json | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
 
           {
-            echo "summary<<EOF"
-            echo "**Version**: $CURRENT → $LATEST"
-            echo "**Options**: $OLD_COUNT → $NEW_COUNT"
+            echo "summary<<SUMMARY_EOF"
+            echo "**Version**: $CURRENT -> $LATEST"
+            echo "**Options**: $OLD_COUNT -> $NEW_COUNT"
             echo ""
             if [ -n "$ADDED" ]; then
               echo "### New options"
@@ -152,15 +158,18 @@ jobs:
             echo "- [x] Parsed >= 150 options"
             echo "- [x] cargo clippy passes"
             echo "- [x] cargo test passes"
-            echo "EOF"
+            echo "SUMMARY_EOF"
           } >> "$GITHUB_OUTPUT"
 
       - name: Create PR
         if: steps.check.outputs.skip == 'false' && steps.pr_check.outputs.skip == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LATEST: ${{ steps.latest.outputs.version }}
+          # Passed through env so backticked option names in the summary are
+          # data, not shell syntax.
+          SUMMARY: ${{ steps.diff.outputs.summary }}
         run: |
-          LATEST="${{ steps.latest.outputs.version }}"
           BRANCH="auto/update-ghostty-docs-v${LATEST}"
 
           git config user.name "github-actions[bot]"
@@ -173,5 +182,19 @@ jobs:
           gh label create automated --description "Automated PR" --color "0E8A16" 2>/dev/null || true
           gh pr create \
             --title "Update Ghostty docs to v${LATEST}" \
-            --body "${{ steps.diff.outputs.summary }}" \
+            --body "$SUMMARY" \
             --label "automated"
+
+          # PRs created with GITHUB_TOKEN do not trigger workflows, so the
+          # required status checks would never report. Dispatch CI explicitly.
+          gh workflow run ci.yml --ref "$BRANCH"
+
+      - name: Keepalive
+        # GitHub auto-disables scheduled workflows after 60 days without repo
+        # activity (this happened on 2026-05-29). Re-enabling on every run
+        # resets that timer.
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api -X PUT "repos/${GITHUB_REPOSITORY}/actions/workflows/update-docs.yml/enable"
