@@ -62,7 +62,7 @@ pub fn search_options(
         })
         .collect();
 
-    scored.sort_by(|a, b| b.score.cmp(&a.score));
+    scored.sort_by_key(|s| std::cmp::Reverse(s.score));
     scored.truncate(limit);
     scored
 }
@@ -167,5 +167,17 @@ mod tests {
         let options = make_options();
         let results = search_options(&options, "zzzznonexistent", None, 10);
         assert!(results.is_empty());
+    }
+
+    #[test]
+    fn search_results_sorted_by_score_descending() {
+        let options = make_options();
+        let results = search_options(&options, "font", None, 10);
+        assert!(results.len() >= 2);
+        assert!(
+            results.windows(2).all(|w| w[0].score >= w[1].score),
+            "results must be sorted by score descending: {:?}",
+            results.iter().map(|r| (&r.option.name, r.score)).collect::<Vec<_>>()
+        );
     }
 }
