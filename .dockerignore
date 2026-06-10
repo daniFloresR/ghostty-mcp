@@ -2,3 +2,7 @@ target/
 .git/
 .gitignore
 *.md
+.claude-plugin/
+plugins/
+.claude/
+.github/

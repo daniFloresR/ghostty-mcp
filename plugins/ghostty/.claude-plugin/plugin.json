@@ -1,0 +1,8 @@
+{
+  "name": "ghostty",
+  "description": "Ghostty terminal configuration assistant: fuzzy-search 200 options, read and edit the config file with validation",
+  "version": "0.5.1",
+  "author": {
+    "name": "Dani Flores"
+  }
+}
