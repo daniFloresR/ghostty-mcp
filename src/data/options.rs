@@ -104,6 +104,83 @@ mod tests {
     }
 
     #[test]
+    fn at_least_150_options_embedded() {
+        // The data pipeline guarantees >= 150 options; pin it at compile-test
+        // time too so a broken regeneration cannot ship.
+        assert!(load_options().len() >= 150);
+    }
+
+    #[test]
+    fn option_names_are_unique() {
+        let options = load_options();
+        let mut names: Vec<&str> = options.iter().map(|o| o.name.as_str()).collect();
+        names.sort();
+        let before = names.len();
+        names.dedup();
+        assert_eq!(
+            before,
+            names.len(),
+            "duplicate option names in embedded data"
+        );
+    }
+
+    #[test]
+    fn no_empty_descriptions() {
+        // Grouped options (font-family-bold etc.) inherit their group's
+        // description in the parser; nothing should ship undocumented.
+        let options = load_options();
+        let empty: Vec<&str> = options
+            .iter()
+            .filter(|o| o.description.is_empty())
+            .map(|o| o.name.as_str())
+            .collect();
+        assert!(
+            empty.is_empty(),
+            "options with empty descriptions: {empty:?}"
+        );
+    }
+
+    #[test]
+    fn enum_options_exist_and_carry_valid_values() {
+        // Regression net for the dead enum-inference bug: the parser shipped
+        // 0 enums for months and the validator's enum branch never ran.
+        let options = load_options();
+        let enums: Vec<_> = options.iter().filter(|o| o.option_type == "enum").collect();
+        assert!(
+            enums.len() >= 20,
+            "expected at least 20 enum options, found {}",
+            enums.len()
+        );
+        for opt in &enums {
+            let values = opt.valid_values.as_ref();
+            assert!(
+                values.is_some_and(|v| v.len() >= 2),
+                "enum option {} must have at least 2 valid_values",
+                opt.name
+            );
+        }
+    }
+
+    #[test]
+    fn cursor_style_enum_canary() {
+        // Concrete end-to-end canary for the parser -> data -> validator
+        // contract on a known stable option.
+        let options = load_options();
+        let cursor_style = options
+            .iter()
+            .find(|o| o.name == "cursor-style")
+            .expect("cursor-style option must exist");
+        assert_eq!(cursor_style.option_type, "enum");
+        let values = cursor_style.valid_values.as_ref().unwrap();
+        for expected in ["block", "bar", "underline", "block_hollow"] {
+            assert!(
+                values.iter().any(|v| v == expected),
+                "cursor-style must accept {expected}"
+            );
+        }
+    }
+
+    #[test]
     fn category_descriptions_cover_all_categories() {
         let options = load_options();
         let descriptions = category_descriptions();

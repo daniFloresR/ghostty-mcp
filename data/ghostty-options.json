@@ -31,14 +31,14 @@
   },
   {
     "name": "font-family-bold",
-    "description": "",
+    "description": "The font families to use.\n\nYou can generate the list of valid values using the CLI:\n\n    ghostty +list-fonts\n\nThis configuration can be repeated multiple times to specify preferred\nfallback fonts when the requested codepoint is not available in the primary\nfont. This is particularly useful for multiple languages, symbolic fonts,\netc.\n\nNotes on emoji specifically: On macOS, Ghostty by default will always use\nApple Color Emoji and on Linux will always use Noto Emoji. You can\noverride this behavior by specifying a font family here that contains\nemoji glyphs.\n\nThe specific styles (bold, italic, bold italic) do not need to be\nexplicitly set. If a style is not set, then the regular style (font-family)\nwill be searched for stylistic variants. If a stylistic variant is not\nfound, Ghostty will use the regular style. This prevents falling back to a\ndifferent font family just to get a style such as bold. This also applies\nif you explicitly specify a font family for a style. For example, if you\nset `font-family-bold = FooBar` and \"FooBar\" cannot be found, Ghostty will\nuse whatever font is set for `font-family` for the bold style.\n\nFinally, some styles may be synthesized if they are not supported.\nFor example, if a font does not have an italic style and no alternative\nitalic font is specified, Ghostty will synthesize an italic style by\napplying a slant to the regular style. If you want to disable these\nsynthesized styles then you can use the `font-style` configurations\nas documented below.\n\nYou can disable styles completely by using the `font-style` set of\nconfigurations. See the documentation for `font-style` for more information.\n\nIf you want to overwrite a previous set value rather than append a fallback,\nspecify the value as `\"\"` (empty string) to reset the list and then set the\nnew values. For example:\n\n    font-family = \"\"\n    font-family = \"My Favorite Font\"\n\nSetting any of these as CLI arguments will automatically clear the\nvalues set in configuration files so you don't need to specify\n`--font-family=\"\"` before setting a new value. You only need to specify\nthis within config files if you want to clear previously set values in\nconfiguration files or on the CLI if you want to clear values set on the\nCLI.",
     "default_value": "",
     "option_type": "string",
     "valid_values": null,
     "category": "font",
     "platform": null,
     "reloadable": true,
-    "repeatable": false,
+    "repeatable": true,
     "search_terms": [
       "bold",
       "family",
@@ -51,14 +51,14 @@
   },
   {
     "name": "font-family-italic",
-    "description": "",
+    "description": "The font families to use.\n\nYou can generate the list of valid values using the CLI:\n\n    ghostty +list-fonts\n\nThis configuration can be repeated multiple times to specify preferred\nfallback fonts when the requested codepoint is not available in the primary\nfont. This is particularly useful for multiple languages, symbolic fonts,\netc.\n\nNotes on emoji specifically: On macOS, Ghostty by default will always use\nApple Color Emoji and on Linux will always use Noto Emoji. You can\noverride this behavior by specifying a font family here that contains\nemoji glyphs.\n\nThe specific styles (bold, italic, bold italic) do not need to be\nexplicitly set. If a style is not set, then the regular style (font-family)\nwill be searched for stylistic variants. If a stylistic variant is not\nfound, Ghostty will use the regular style. This prevents falling back to a\ndifferent font family just to get a style such as bold. This also applies\nif you explicitly specify a font family for a style. For example, if you\nset `font-family-bold = FooBar` and \"FooBar\" cannot be found, Ghostty will\nuse whatever font is set for `font-family` for the bold style.\n\nFinally, some styles may be synthesized if they are not supported.\nFor example, if a font does not have an italic style and no alternative\nitalic font is specified, Ghostty will synthesize an italic style by\napplying a slant to the regular style. If you want to disable these\nsynthesized styles then you can use the `font-style` configurations\nas documented below.\n\nYou can disable styles completely by using the `font-style` set of\nconfigurations. See the documentation for `font-style` for more information.\n\nIf you want to overwrite a previous set value rather than append a fallback,\nspecify the value as `\"\"` (empty string) to reset the list and then set the\nnew values. For example:\n\n    font-family = \"\"\n    font-family = \"My Favorite Font\"\n\nSetting any of these as CLI arguments will automatically clear the\nvalues set in configuration files so you don't need to specify\n`--font-family=\"\"` before setting a new value. You only need to specify\nthis within config files if you want to clear previously set values in\nconfiguration files or on the CLI if you want to clear values set on the\nCLI.",
     "default_value": "",
     "option_type": "string",
     "valid_values": null,
     "category": "font",
     "platform": null,
     "reloadable": true,
-    "repeatable": false,
+    "repeatable": true,
     "search_terms": [
       "family",
       "font",
@@ -71,14 +71,14 @@
   },
   {
     "name": "font-family-bold-italic",
-    "description": "",
+    "description": "The font families to use.\n\nYou can generate the list of valid values using the CLI:\n\n    ghostty +list-fonts\n\nThis configuration can be repeated multiple times to specify preferred\nfallback fonts when the requested codepoint is not available in the primary\nfont. This is particularly useful for multiple languages, symbolic fonts,\netc.\n\nNotes on emoji specifically: On macOS, Ghostty by default will always use\nApple Color Emoji and on Linux will always use Noto Emoji. You can\noverride this behavior by specifying a font family here that contains\nemoji glyphs.\n\nThe specific styles (bold, italic, bold italic) do not need to be\nexplicitly set. If a style is not set, then the regular style (font-family)\nwill be searched for stylistic variants. If a stylistic variant is not\nfound, Ghostty will use the regular style. This prevents falling back to a\ndifferent font family just to get a style such as bold. This also applies\nif you explicitly specify a font family for a style. For example, if you\nset `font-family-bold = FooBar` and \"FooBar\" cannot be found, Ghostty will\nuse whatever font is set for `font-family` for the bold style.\n\nFinally, some styles may be synthesized if they are not supported.\nFor example, if a font does not have an italic style and no alternative\nitalic font is specified, Ghostty will synthesize an italic style by\napplying a slant to the regular style. If you want to disable these\nsynthesized styles then you can use the `font-style` configurations\nas documented below.\n\nYou can disable styles completely by using the `font-style` set of\nconfigurations. See the documentation for `font-style` for more information.\n\nIf you want to overwrite a previous set value rather than append a fallback,\nspecify the value as `\"\"` (empty string) to reset the list and then set the\nnew values. For example:\n\n    font-family = \"\"\n    font-family = \"My Favorite Font\"\n\nSetting any of these as CLI arguments will automatically clear the\nvalues set in configuration files so you don't need to specify\n`--font-family=\"\"` before setting a new value. You only need to specify\nthis within config files if you want to clear previously set values in\nconfiguration files or on the CLI if you want to clear values set on the\nCLI.",
     "default_value": "",
     "option_type": "string",
     "valid_values": null,
     "category": "font",
     "platform": null,
     "reloadable": true,
-    "repeatable": false,
+    "repeatable": true,
     "search_terms": [
       "bold",
       "family",
@@ -116,7 +116,7 @@
   },
   {
     "name": "font-style-bold",
-    "description": "",
+    "description": "The named font style to use for each of the requested terminal font styles.\nThis looks up the style based on the font style string advertised by the\nfont itself. For example, \"Iosevka Heavy\" has a style of \"Heavy\".\n\nYou can also use these fields to completely disable a font style. If you set\nthe value of the configuration below to literal `false` then that font style\nwill be disabled. If the running program in the terminal requests a disabled\nfont style, the regular font style will be used instead.\n\nThese are only valid if its corresponding font-family is also specified. If\nno font-family is specified, then the font-style is ignored unless you're\ndisabling the font style.",
     "default_value": "default",
     "option_type": "string",
     "valid_values": null,
@@ -136,7 +136,7 @@
   },
   {
     "name": "font-style-italic",
-    "description": "",
+    "description": "The named font style to use for each of the requested terminal font styles.\nThis looks up the style based on the font style string advertised by the\nfont itself. For example, \"Iosevka Heavy\" has a style of \"Heavy\".\n\nYou can also use these fields to completely disable a font style. If you set\nthe value of the configuration below to literal `false` then that font style\nwill be disabled. If the running program in the terminal requests a disabled\nfont style, the regular font style will be used instead.\n\nThese are only valid if its corresponding font-family is also specified. If\nno font-family is specified, then the font-style is ignored unless you're\ndisabling the font style.",
     "default_value": "default",
     "option_type": "string",
     "valid_values": null,
@@ -156,7 +156,7 @@
   },
   {
     "name": "font-style-bold-italic",
-    "description": "",
+    "description": "The named font style to use for each of the requested terminal font styles.\nThis looks up the style based on the font style string advertised by the\nfont itself. For example, \"Iosevka Heavy\" has a style of \"Heavy\".\n\nYou can also use these fields to completely disable a font style. If you set\nthe value of the configuration below to literal `false` then that font style\nwill be disabled. If the running program in the terminal requests a disabled\nfont style, the regular font style will be used instead.\n\nThese are only valid if its corresponding font-family is also specified. If\nno font-family is specified, then the font-style is ignored unless you're\ndisabling the font style.",
     "default_value": "default",
     "option_type": "string",
     "valid_values": null,
@@ -275,14 +275,14 @@
   },
   {
     "name": "font-variation-bold",
-    "description": "",
+    "description": "A repeatable configuration to set one or more font variations values for\na variable font. A variable font is a single font, usually with a filename\nending in `-VF.ttf` or `-VF.otf` that contains one or more configurable axes\nfor things such as weight, slant, etc. Not all fonts support variations;\nonly fonts that explicitly state they are variable fonts will work.\n\nThe format of this is `id=value` where `id` is the axis identifier. An axis\nidentifier is always a 4 character string, such as `wght`. To get the list\nof supported axes, look at your font documentation or use a font inspection\ntool.\n\nInvalid ids and values are usually ignored. For example, if a font only\nsupports weights from 100 to 700, setting `wght=800` will do nothing (it\nwill not be clamped to 700). You must consult your font's documentation to\nsee what values are supported.\n\nCommon axes are: `wght` (weight), `slnt` (slant), `ital` (italic), `opsz`\n(optical size), `wdth` (width), `GRAD` (gradient), etc.",
     "default_value": "",
     "option_type": "string",
     "valid_values": null,
     "category": "font",
     "platform": null,
     "reloadable": true,
-    "repeatable": false,
+    "repeatable": true,
     "search_terms": [
       "bold",
       "font",
@@ -295,14 +295,14 @@
   },
   {
     "name": "font-variation-italic",
-    "description": "",
+    "description": "A repeatable configuration to set one or more font variations values for\na variable font. A variable font is a single font, usually with a filename\nending in `-VF.ttf` or `-VF.otf` that contains one or more configurable axes\nfor things such as weight, slant, etc. Not all fonts support variations;\nonly fonts that explicitly state they are variable fonts will work.\n\nThe format of this is `id=value` where `id` is the axis identifier. An axis\nidentifier is always a 4 character string, such as `wght`. To get the list\nof supported axes, look at your font documentation or use a font inspection\ntool.\n\nInvalid ids and values are usually ignored. For example, if a font only\nsupports weights from 100 to 700, setting `wght=800` will do nothing (it\nwill not be clamped to 700). You must consult your font's documentation to\nsee what values are supported.\n\nCommon axes are: `wght` (weight), `slnt` (slant), `ital` (italic), `opsz`\n(optical size), `wdth` (width), `GRAD` (gradient), etc.",
     "default_value": "",
     "option_type": "string",
     "valid_values": null,
     "category": "font",
     "platform": null,
     "reloadable": true,
-    "repeatable": false,
+    "repeatable": true,
     "search_terms": [
       "font",
       "italic",
@@ -315,14 +315,14 @@
   },
   {
     "name": "font-variation-bold-italic",
-    "description": "",
+    "description": "A repeatable configuration to set one or more font variations values for\na variable font. A variable font is a single font, usually with a filename\nending in `-VF.ttf` or `-VF.otf` that contains one or more configurable axes\nfor things such as weight, slant, etc. Not all fonts support variations;\nonly fonts that explicitly state they are variable fonts will work.\n\nThe format of this is `id=value` where `id` is the axis identifier. An axis\nidentifier is always a 4 character string, such as `wght`. To get the list\nof supported axes, look at your font documentation or use a font inspection\ntool.\n\nInvalid ids and values are usually ignored. For example, if a font only\nsupports weights from 100 to 700, setting `wght=800` will do nothing (it\nwill not be clamped to 700). You must consult your font's documentation to\nsee what values are supported.\n\nCommon axes are: `wght` (weight), `slnt` (slant), `ital` (italic), `opsz`\n(optical size), `wdth` (width), `GRAD` (gradient), etc.",
     "default_value": "",
     "option_type": "string",
     "valid_values": null,
     "category": "font",
     "platform": null,
     "reloadable": true,
-    "repeatable": false,
+    "repeatable": true,
     "search_terms": [
       "bold",
       "font",
@@ -417,8 +417,12 @@
     "name": "alpha-blending",
     "description": "What color space to use when performing alpha blending.\n\nThis affects the appearance of text and of any images with transparency.\nAdditionally, custom shaders will receive colors in the configured space.\n\nOn macOS the default is `native`, on all other platforms the default is\n`linear-corrected`.\n\nValid values:\n\n* `native` - Perform alpha blending in the native color space for the OS.\n  On macOS this corresponds to Display P3, and on Linux it's sRGB.\n\n* `linear` - Perform alpha blending in linear space. This will eliminate\n  the darkening artifacts around the edges of text that are very visible\n  when certain color combinations are used (e.g. red / green), but makes\n  dark text look much thinner than normal and light text much thicker.\n  This is also sometimes known as \"gamma correction\".\n\n* `linear-corrected` - Same as `linear`, but with a correction step applied\n  for text that makes it look nearly or completely identical to `native`,\n  but without any of the darkening artifacts.\n\nAvailable since: 1.1.0",
     "default_value": "native",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "native",
+      "linear",
+      "linear-corrected"
+    ],
     "category": "appearance",
     "platform": null,
     "reloadable": true,
@@ -433,7 +437,7 @@
     "name": "adjust-cell-width",
     "description": "All of the configurations behavior adjust various metrics determined by the\nfont. The values can be integers (1, -1, etc.) or a percentage (20%, -15%,\netc.). In each case, the values represent the amount to change the original\nvalue.\n\nFor example, a value of `1` increases the value by 1; it does not set it to\nliterally 1. A value of `20%` increases the value by 20%. And so on.\n\nThere is little to no validation on these values so the wrong values (e.g.\n`-100%`) can cause the terminal to be unusable. Use with caution and reason.\n\nSome values are clamped to minimum or maximum values. This can make it\nappear that certain values are ignored. For example, many `*-thickness`\nadjustments cannot go below 1px.\n\n`adjust-cell-height` has some additional behaviors to describe:\n\n  * The font will be centered vertically in the cell.\n\n  * The cursor will remain the same size as the font, but may be\n    adjusted separately with `adjust-cursor-height`.\n\n  * Powerline glyphs will be adjusted along with the cell height so\n    that things like status lines continue to look aligned.",
     "default_value": "",
-    "option_type": "number",
+    "option_type": "string",
     "valid_values": null,
     "category": "font",
     "platform": null,
@@ -450,7 +454,7 @@
   },
   {
     "name": "adjust-cell-height",
-    "description": "",
+    "description": "All of the configurations behavior adjust various metrics determined by the\nfont. The values can be integers (1, -1, etc.) or a percentage (20%, -15%,\netc.). In each case, the values represent the amount to change the original\nvalue.\n\nFor example, a value of `1` increases the value by 1; it does not set it to\nliterally 1. A value of `20%` increases the value by 20%. And so on.\n\nThere is little to no validation on these values so the wrong values (e.g.\n`-100%`) can cause the terminal to be unusable. Use with caution and reason.\n\nSome values are clamped to minimum or maximum values. This can make it\nappear that certain values are ignored. For example, many `*-thickness`\nadjustments cannot go below 1px.\n\n`adjust-cell-height` has some additional behaviors to describe:\n\n  * The font will be centered vertically in the cell.\n\n  * The cursor will remain the same size as the font, but may be\n    adjusted separately with `adjust-cursor-height`.\n\n  * Powerline glyphs will be adjusted along with the cell height so\n    that things like status lines continue to look aligned.",
     "default_value": "",
     "option_type": "string",
     "valid_values": null,
@@ -674,8 +678,11 @@
     "name": "grapheme-width-method",
     "description": "The method to use for calculating the cell width of a grapheme cluster.\nThe default value is `unicode` which uses the Unicode standard to determine\ngrapheme width. This results in correct grapheme width but may result in\ncursor-desync issues with some programs (such as shells) that may use a\nlegacy method such as `wcswidth`.\n\nValid values are:\n\n* `legacy` - Use a legacy method to determine grapheme width, such as\n  wcswidth This maximizes compatibility with legacy programs but may result\n  in incorrect grapheme width for certain graphemes such as skin-tone\n  emoji, non-English characters, etc.\n\n  This is called \"legacy\" and not something more specific because the\n  behavior is undefined and we want to retain the ability to modify it.\n  For example, we may or may not use libc `wcswidth` now or in the future.\n\n* `unicode` - Use the Unicode standard to determine grapheme width.\n\nIf a running program explicitly enables terminal mode 2027, then `unicode`\nwidth will be forced regardless of this configuration. When mode 2027 is\nreset, this configuration will be used again.\n\nThis configuration can be changed at runtime but will not affect existing\nterminals. Only new terminals will use the new configuration.",
     "default_value": "unicode",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "legacy",
+      "unicode"
+    ],
     "category": "font",
     "platform": null,
     "reloadable": true,
@@ -692,7 +699,12 @@
     "description": "FreeType load flags to enable. The format of this is a list of flags to\nenable separated by commas. If you prefix a flag with `no-` then it is\ndisabled. If you omit a flag, its default value is used, so you must\nexplicitly disable flags you don't want. You can also use `true` or `false`\nto turn all flags on or off.\n\nThis configuration only applies to Ghostty builds that use FreeType.\nThis is usually the case only for Linux builds. macOS uses CoreText\nand does not have an equivalent configuration.\n\nAvailable flags:\n\n  * `hinting` - Enable or disable hinting. Enabled by default.\n\n  * `force-autohint` - Always use the freetype auto-hinter instead of\n    the font's native hinter. Disabled by default.\n\n  * `monochrome` - Instructs renderer to use 1-bit monochrome rendering.\n    This will disable anti-aliasing, and probably not look very good unless\n    you're using a pixel font. Disabled by default.\n\n  * `autohint` - Enable the freetype auto-hinter. Enabled by default.\n\nExample: `hinting`, `no-hinting`, `force-autohint`, `no-force-autohint`",
     "default_value": "hinting,no-force-autohint,no-monochrome,autohint",
     "option_type": "string",
-    "valid_values": null,
+    "valid_values": [
+      "hinting",
+      "force-autohint",
+      "monochrome",
+      "autohint"
+    ],
     "category": "font",
     "platform": null,
     "reloadable": true,
@@ -816,8 +828,18 @@
     "name": "background-image-position",
     "description": "Background image position.\n\nValid values are:\n  * `top-left`\n  * `top-center`\n  * `top-right`\n  * `center-left`\n  * `center`\n  * `center-right`\n  * `bottom-left`\n  * `bottom-center`\n  * `bottom-right`\n\nThe default value is `center`.\n\nAvailable since: 1.2.0",
     "default_value": "center",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "center-left",
+      "center",
+      "center-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ],
     "category": "appearance",
     "platform": null,
     "reloadable": true,
@@ -837,8 +859,13 @@
     "name": "background-image-fit",
     "description": "Background image fit.\n\nValid values are:\n\n * `contain`\n\n   Preserving the aspect ratio, scale the background image to the largest\n   size that can still be contained within the terminal, so that the whole\n   image is visible.\n\n * `cover`\n\n   Preserving the aspect ratio, scale the background image to the smallest\n   size that can completely cover the terminal. This may result in one or\n   more edges of the image being clipped by the edge of the terminal.\n\n * `stretch`\n\n   Stretch the background image to the full size of the terminal, without\n   preserving the aspect ratio.\n\n * `none`\n\n   Don't scale the background image.\n\nThe default value is `contain`.\n\nAvailable since: 1.2.0",
     "default_value": "contain",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "contain",
+      "cover",
+      "stretch",
+      "none"
+    ],
     "category": "appearance",
     "platform": null,
     "reloadable": true,
@@ -899,9 +926,9 @@
   },
   {
     "name": "selection-background",
-    "description": "",
+    "description": "The foreground and background color for selection. If this is not set, then\nthe selection color is just the inverted window background and foreground\n(note: not to be confused with the cell bg/fg).\nSpecified as either hex (`#RRGGBB` or `RRGGBB`) or a named X11 color.\nSince version 1.2.0, this can also be set to `cell-foreground` to match\nthe cell foreground color, or `cell-background` to match the cell\nbackground color.",
     "default_value": "",
-    "option_type": "string",
+    "option_type": "color",
     "valid_values": null,
     "category": "selection",
     "platform": null,
@@ -995,7 +1022,10 @@
     "description": "The color of the cursor. If this is not set, a default will be chosen.\n\nDirect colors can be specified as either hex (`#RRGGBB` or `RRGGBB`)\nor a named X11 color.\n\nAdditionally, special values can be used to set the color to match\nother colors at runtime:\n\n  * `cell-foreground` - Match the cell foreground color.\n    (Available since: 1.2.0)\n\n  * `cell-background` - Match the cell background color.\n    (Available since: 1.2.0)",
     "default_value": "",
     "option_type": "color",
-    "valid_values": null,
+    "valid_values": [
+      "cell-foreground",
+      "cell-background"
+    ],
     "category": "cursor",
     "platform": null,
     "reloadable": true,
@@ -1039,8 +1069,13 @@
     "name": "cursor-style",
     "description": "The style of the cursor. This sets the default style. A running program can\nstill request an explicit cursor style using escape sequences (such as `CSI\nq`). Shell configurations will often request specific cursor styles.\n\nNote that shell integration will automatically set the cursor to a bar at\na prompt, regardless of this configuration. You can disable that behavior\nby specifying `shell-integration-features = no-cursor` or disabling shell\nintegration entirely.\n\nValid values are:\n\n  * `block`\n  * `bar`\n  * `underline`\n  * `block_hollow`",
     "default_value": "block",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "block",
+      "bar",
+      "underline",
+      "block_hollow"
+    ],
     "category": "cursor",
     "platform": null,
     "reloadable": true,
@@ -1064,8 +1099,11 @@
     "name": "cursor-style-blink",
     "description": "Sets the default blinking state of the cursor. This is just the default\nstate; running programs may override the cursor style using `DECSCUSR` (`CSI\nq`).\n\nIf this is not set, the cursor blinks by default. Note that this is not the\nsame as a \"true\" value, as noted below.\n\nIf this is not set at all (`null`), then Ghostty will respect DEC Mode 12\n(AT&T cursor blink) as an alternate approach to turning blinking on/off. If\nthis is set to any value other than null, DEC mode 12 will be ignored but\n`DECSCUSR` will still be respected.\n\nValid values are:\n\n  * ` ` (blank)\n  * `true`\n  * `false`",
     "default_value": "",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "true",
+      "false"
+    ],
     "category": "cursor",
     "platform": null,
     "reloadable": true,
@@ -1440,7 +1478,7 @@
   },
   {
     "name": "link-url",
-    "description": "Match a regular expression against the terminal text and associate clicking\nit with an action. This can be used to match URLs, file paths, etc. Actions\ncan be opening using the system opener (e.g. `open` or `xdg-open`) or\nexecuting any arbitrary binding action.\n\nLinks that are configured earlier take precedence over links that are\nconfigured later.\n\nA default link that matches a URL and opens it in the system opener always\nexists. This can be disabled using `link-url`.\n\nTODO: This can't currently be set!\nEnable URL matching. URLs are matched on hover with control (Linux) or\ncommand (macOS) pressed and open using the default system application for\nthe linked URL.\n\nThe URL matcher is always lowest priority of any configured links (see\n`link`). If you want to customize URL matching, use `link` and disable this.",
+    "description": "Enable URL matching. URLs are matched on hover with control (Linux) or\ncommand (macOS) pressed and open using the default system application for\nthe linked URL.\n\nThe URL matcher is always lowest priority of any configured links (see\n`link`). If you want to customize URL matching, use `link` and disable this.",
     "default_value": "true",
     "option_type": "boolean",
     "valid_values": null,
@@ -1562,7 +1600,10 @@
     "description": "The directory to change to after starting the command.\n\nThis setting is secondary to the `window-inherit-working-directory`\nsetting. If a previous Ghostty terminal exists in the same process,\n`window-inherit-working-directory` will take precedence. Otherwise, this\nsetting will be used. Typically, this setting is used only for the first\nwindow.\n\nThe default is `inherit` except in special scenarios listed next. On macOS,\nif Ghostty can detect it is launched from launchd (double-clicked) or\n`open`, then it defaults to `home`. On Linux with GTK, if Ghostty can detect\nit was launched from a desktop launcher, then it defaults to `home`.\n\nThe value of this must be an absolute value or one of the special values\nbelow:\n\n  * `home` - The home directory of the executing user.\n\n  * `inherit` - The working directory of the launching process.",
     "default_value": "",
     "option_type": "path",
-    "valid_values": null,
+    "valid_values": [
+      "home",
+      "inherit"
+    ],
     "category": "shell",
     "platform": null,
     "reloadable": true,
@@ -1578,7 +1619,10 @@
     "description": "Key bindings. The format is `trigger=action`. Duplicate triggers will\noverwrite previously set values. The list of actions is available in\nthe documentation or using the `ghostty +list-actions` command.\n\nTrigger: `+`-separated list of keys and modifiers. Example: `ctrl+a`,\n`ctrl+shift+b`, `up`.\n\nIf the key is a single Unicode codepoint, the trigger will match\nany presses that produce that codepoint. These are impacted by\nkeyboard layouts. For example, `a` will match the `a` key on a\nQWERTY keyboard, but will match the `q` key on a AZERTY keyboard\n(assuming US physical layout).\n\nFor Unicode codepoints, matching is done by comparing the set of\nmodifiers with the unmodified codepoint. The unmodified codepoint is\nsometimes called an \"unshifted character\" in other software, but all\nmodifiers are considered, not only shift. For example, `ctrl+a` will match\n`a` but not `ctrl+shift+a` (which is `A` on a US keyboard).\n\nFurther, codepoint matching is case-insensitive and the unmodified\ncodepoint is always case folded for comparison. As a result,\n`ctrl+A` configured will match when `ctrl+a` is pressed. Note that\nthis means some key combinations are impossible depending on keyboard\nlayout. For example, `ctrl+_` is impossible on a US keyboard because\n`_` is `shift+-` and `ctrl+shift+-` is not equal to `ctrl+_` (because\nthe modifiers don't match!). More details on impossible key combinations\ncan be found at this excellent source written by Qt developers:\nhttps://doc.qt.io/qt-6/qkeysequence.html#keyboard-layout-issues\n\nPhysical key codes can be specified by using any of the key codes\nas specified by the [W3C specification](https://www.w3.org/TR/uievents-code/).\nFor example, `KeyA` will match the physical `a` key on a US standard\nkeyboard regardless of the keyboard layout. These are case-sensitive.\n\nFor aesthetic reasons, the w3c codes also support snake case. For\nexample, `key_a` is equivalent to `KeyA`. The only exceptions are\nfunction keys, e.g. `F1` is `f1` (no underscore). This is a consequence\nof our internal code using snake case but is purposely supported\nand tested so it is safe to use. It allows an all-lowercase binding\nwhich I find more aesthetically pleasing.\n\nFunction keys such as `insert`, `up`, `f5`, etc. are also specified\nusing the keys as specified by the previously linked W3C specification.\n\nPhysical keys always match with a higher priority than Unicode codepoints,\nso if you specify both `a` and `KeyA`, the physical key will always be used\nregardless of what order they are configured.\n\nValid modifiers are `shift`, `ctrl` (alias: `control`), `alt` (alias: `opt`,\n`option`), and `super` (alias: `cmd`, `command`). You may use the modifier\nor the alias. When debugging keybinds, the non-aliased modifier will always\nbe used in output.\n\nNote: The fn or \"globe\" key on keyboards are not supported as a\nmodifier. This is a limitation of the operating systems and GUI toolkits\nthat Ghostty uses.\n\nSome additional notes for triggers:\n\n  * modifiers cannot repeat, `ctrl+ctrl+a` is invalid.\n\n  * modifiers and keys can be in any order, `shift+a+ctrl` is *weird*,\n    but valid.\n\n  * only a single key input is allowed, `ctrl+a+b` is invalid.\n\nYou may also specify multiple triggers separated by `>` to require a\nsequence of triggers to activate the action. For example,\n`ctrl+a>n=new_window` will only trigger the `new_window` action if the\nuser presses `ctrl+a` followed separately by `n`. In other software, this\nis sometimes called a leader key, a key chord, a key table, etc. There\nis no hardcoded limit on the number of parts in a sequence.\n\nWarning: If you define a sequence as a CLI argument to `ghostty`,\nyou probably have to quote the keybind since `>` is a special character\nin most shells. Example: ghostty --keybind='ctrl+a>n=new_window'\n\nA trigger sequence has some special handling:\n\n  * Ghostty will wait an indefinite amount of time for the next key in\n    the sequence. There is no way to specify a timeout. The only way to\n    force the output of a prefix key is to assign another keybind to\n    specifically output that key (e.g. `ctrl+a>ctrl+a=text:foo`) or\n    press an unbound key which will send both keys to the program.\n\n  * If a prefix in a sequence is previously bound, the sequence will\n    override the previous binding. For example, if `ctrl+a` is bound to\n    `new_window` and `ctrl+a>n` is bound to `new_tab`, pressing `ctrl+a`\n    will do nothing.\n\n  * Adding to the above, if a previously bound sequence prefix is\n    used in a new, non-sequence binding, the entire previously bound\n    sequence will be unbound. For example, if you bind `ctrl+a>n` and\n    `ctrl+a>t`, and then bind `ctrl+a` directly, both `ctrl+a>n` and\n    `ctrl+a>t` will become unbound.\n\n  * Trigger sequences are not allowed for `global:` or `all:`-prefixed\n    triggers. This is a limitation we could remove in the future.\n\nAction is the action to take when the trigger is satisfied. It takes the\nformat `action` or `action:param`. The latter form is only valid if the\naction requires a parameter.\n\n  * `ignore` - Do nothing, ignore the key input. This can be used to\n    black hole certain inputs to have no effect.\n\n  * `unbind` - Remove the binding. This makes it so the previous action\n    is removed, and the key will be sent through to the child command\n    if it is printable. Unbind will remove any matching trigger,\n    including `physical:`-prefixed triggers without specifying the\n    prefix.\n\n  * `csi:text` - Send a CSI sequence. e.g. `csi:A` sends \"cursor up\".\n\n  * `esc:text` - Send an escape sequence. e.g. `esc:d` deletes to the\n    end of the word to the right.\n\n  * `text:text` - Send a string. Uses Zig string literal syntax.\n    e.g. `text:\\x15` sends Ctrl-U.\n\n  * All other actions can be found in the documentation or by using the\n    `ghostty +list-actions` command.\n\nSome notes for the action:\n\n  * The parameter is taken as-is after the `:`. Double quotes or\n    other mechanisms are included and NOT parsed. If you want to\n    send a string value that includes spaces, wrap the entire\n    trigger/action in double quotes. Example: `--keybind=\"up=csi:A B\"`\n\nThere are some additional special values that can be specified for\nkeybind:\n\n  * `keybind=clear` will clear all set keybindings. Warning: this\n    removes ALL keybindings up to this point, including the default\n    keybindings.\n\nThe keybind trigger can be prefixed with some special values to change\nthe behavior of the keybind. These are:\n\n * `all:`\n\n   Make the keybind apply to all terminal surfaces. By default,\n   keybinds only apply to the focused terminal surface. If this is true,\n   then the keybind will be sent to all terminal surfaces. This only\n   applies to actions that are surface-specific. For actions that\n   are already global (e.g. `quit`), this prefix has no effect.\n\n   Available since: 1.0.0\n\n * `global:`\n\n   Make the keybind global. By default, keybinds only work within Ghostty\n   and under the right conditions (application focused, sometimes terminal\n   focused, etc.). If you want a keybind to work globally across your system\n   (e.g. even when Ghostty is not focused), specify this prefix.\n   This prefix implies `all:`.\n\n   Note: this does not work in all environments; see the additional notes\n   below for more information.\n\n   Available since: 1.0.0 on macOS, 1.2.0 on GTK\n\n * `unconsumed:`\n\n   Do not consume the input. By default, a keybind will consume the input,\n   meaning that the associated encoding (if any) will not be sent to the\n   running program in the terminal. If you wish to send the encoded value\n   to the program, specify the `unconsumed:` prefix before the entire\n   keybind. For example: `unconsumed:ctrl+a=reload_config`. `global:` and\n   `all:`-prefixed keybinds will always consume the input regardless of\n   this setting. Since they are not associated with a specific terminal\n   surface, they're never encoded.\n\n   Available since: 1.0.0\n\n * `performable:`\n\n   Only consume the input if the action is able to be performed.\n   For example, the `copy_to_clipboard` action will only consume the input\n   if there is a selection to copy. If there is no selection, Ghostty\n   behaves as if the keybind was not set. This has no effect with `global:`\n   or `all:`-prefixed keybinds. For key sequences, this will reset the\n   sequence if the action is not performable (acting identically to not\n   having a keybind set at all).\n\n   Performable keybinds will not appear as menu shortcuts in the\n   application menu. This is because the menu shortcuts force the\n   action to be performed regardless of the state of the terminal.\n   Performable keybinds will still work, they just won't appear as\n   a shortcut label in the menu.\n\n   Available since: 1.1.0\n\nKeybind triggers are not unique per prefix combination. For example,\n`ctrl+a` and `global:ctrl+a` are not two separate keybinds. The keybind\nset later will overwrite the keybind set earlier. In this case, the\n`global:` keybind will be used.\n\nMultiple prefixes can be specified. For example,\n`global:unconsumed:ctrl+a=reload_config` will make the keybind global\nand not consume the input to reload the config.\n\nNote: `global:` is only supported on macOS and certain Linux platforms.\n\nOn macOS, this feature requires accessibility permissions to be granted\nto Ghostty. When a `global:` keybind is specified and Ghostty is launched\nor reloaded, Ghostty will attempt to request these permissions.\nIf the permissions are not granted, the keybind will not work. On macOS,\nyou can find these permissions in System Preferences -> Privacy & Security\n-> Accessibility.\n\nOn Linux, you need a desktop environment that implements the\n[Global Shortcuts](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.GlobalShortcuts.html)\nprotocol as a part of its XDG desktop protocol implementation.\nDesktop environments that are known to support (or not support)\nglobal shortcuts include:\n\n - Users using KDE Plasma (since [5.27](https://kde.org/announcements/plasma/5/5.27.0/#wayland))\n   and GNOME (since [48](https://release.gnome.org/48/#and-thats-not-all)) should be able\n   to use global shortcuts with little to no configuration.\n\n - Some manual configuration is required on Hyprland. Consult the steps\n   outlined on the [Hyprland Wiki](https://wiki.hyprland.org/Configuring/Binds/#dbus-global-shortcuts)\n   to set up global shortcuts correctly.\n   (Important: [`xdg-desktop-portal-hyprland`](https://wiki.hyprland.org/Hypr-Ecosystem/xdg-desktop-portal-hyprland/)\n   must also be installed!)\n\n - Notably, global shortcuts have not been implemented on wlroots-based\n   compositors like Sway (see [upstream issue](https://github.com/emersion/xdg-desktop-portal-wlr/issues/240)).",
     "default_value": "super+shift+d=new_split:down",
     "option_type": "keybind",
-    "valid_values": null,
+    "valid_values": [
+      "ignore",
+      "unbind"
+    ],
     "category": "keybind",
     "platform": [
       "macos"
@@ -1665,8 +1709,12 @@
     "name": "window-padding-color",
     "description": "The color of the padding area of the window. Valid values are:\n\n* `background` - The background color specified in `background`.\n* `extend` - Extend the background color of the nearest grid cell.\n* `extend-always` - Same as \"extend\" but always extends without applying\n  any of the heuristics that disable extending noted below.\n\nThe \"extend\" value will be disabled in certain scenarios. On primary\nscreen applications (e.g. not something like Neovim), the color will not\nbe extended vertically if any of the following are true:\n\n* The nearest row has any cells that have the default background color.\n  The thinking is that in this case, the default background color looks\n  fine as a padding color.\n* The nearest row is a prompt row (requires shell integration). The\n  thinking here is that prompts often contain powerline glyphs that\n  do not look good extended.\n* The nearest row contains a perfect fit powerline character. These\n  don't look good extended.",
     "default_value": "background",
-    "option_type": "color",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "background",
+      "extend",
+      "extend-always"
+    ],
     "category": "window",
     "platform": null,
     "reloadable": true,
@@ -1749,8 +1797,13 @@
     "name": "window-decoration",
     "description": "Configure a preference for window decorations. This setting specifies\na _preference_; the actual OS, desktop environment, window manager, etc.\nmay override this preference. Ghostty will do its best to respect this\npreference but it may not always be possible.\n\nValid values:\n\n * `none`\n\n   All window decorations will be disabled. Titlebar, borders, etc. will\n   not be shown. On macOS, this will also disable tabs (enforced by the\n   system).\n\n * `auto`\n\n   Automatically decide to use either client-side or server-side\n   decorations based on the detected preferences of the current OS and\n   desktop environment. This option usually makes Ghostty look the most\n   \"native\" for your desktop.\n\n * `client`\n\n   Prefer client-side decorations.\n\n   Available since: 1.1.0\n\n * `server`\n\n   Prefer server-side decorations. This is only relevant on Linux with GTK,\n   either on X11, or Wayland on a compositor that supports the\n   `org_kde_kwin_server_decoration` protocol (e.g. KDE Plasma, but almost\n   any non-GNOME desktop supports this protocol).\n\n   If `server` is set but the environment doesn't support server-side\n   decorations, client-side decorations will be used instead.\n\n   Available since: 1.1.0\n\nThe default value is `auto`.\n\nFor the sake of backwards compatibility and convenience, this setting also\naccepts boolean true and false values. If set to `true`, this is equivalent\nto `auto`. If set to `false`, this is equivalent to `none`.\nThis is convenient for users who live primarily on systems that don't\ndifferentiate between client and server-side decorations (e.g. macOS and\nWindows).\n\nThe \"toggle_window_decorations\" keybind action can be used to create\na keybinding to toggle this setting at runtime.\n\nmacOS: To hide the titlebar without removing the native window borders\n       or rounded corners, use `macos-titlebar-style = hidden` instead.",
     "default_value": "auto",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "none",
+      "auto",
+      "client",
+      "server"
+    ],
     "category": "window",
     "platform": null,
     "reloadable": true,
@@ -1825,8 +1878,14 @@
     "name": "window-theme",
     "description": "The theme to use for the windows. Valid values:\n\n  * `auto` - Determine the theme based on the configured terminal\n     background color. This has no effect if the \"theme\" configuration\n     has separate light and dark themes. In that case, the behavior\n     of \"auto\" is equivalent to \"system\".\n  * `system` - Use the system theme.\n  * `light` - Use the light theme regardless of system theme.\n  * `dark` - Use the dark theme regardless of system theme.\n  * `ghostty` - Use the background and foreground colors specified in the\n    Ghostty configuration. This is only supported on Linux builds.\n\nOn macOS, if `macos-titlebar-style` is \"tabs\", the window theme will be\nautomatically set based on the luminosity of the terminal background color.\nThis only applies to terminal windows. This setting will still apply to\nnon-terminal windows within Ghostty.\n\nThis is currently only supported on macOS and Linux.",
     "default_value": "auto",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "auto",
+      "system",
+      "light",
+      "dark",
+      "ghostty"
+    ],
     "category": "window",
     "platform": [
       "macos"
@@ -1854,8 +1913,11 @@
     "name": "window-colorspace",
     "description": "The color space to use when interpreting terminal colors. \"Terminal colors\"\nrefers to colors specified in your configuration and colors produced by\ndirect-color SGR sequences.\n\nValid values:\n\n  * `srgb` - Interpret colors in the sRGB color space. This is the default.\n  * `display-p3` - Interpret colors in the Display P3 color space.\n\nThis setting is currently only supported on macOS.",
     "default_value": "srgb",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "srgb",
+      "display-p3"
+    ],
     "category": "window",
     "platform": [
       "macos"
@@ -1908,7 +1970,7 @@
   },
   {
     "name": "window-width",
-    "description": "",
+    "description": "The initial window size. This size is in terminal grid cells by default.\nBoth values must be set to take effect. If only one value is set, it is\nignored.\n\nWe don't currently support specifying a size in pixels but a future change\ncan enable that. If this isn't specified, the app runtime will determine\nsome default size.\n\nNote that the window manager may put limits on the size or override the\nsize. For example, a tiling window manager may force the window to be a\ncertain size to fit within the grid. There is nothing Ghostty will do about\nthis, but it will make an effort.\n\nSizes larger than the screen size will be clamped to the screen size.\nThis can be used to create a maximized-by-default window size.\n\nThis will not affect new tabs, splits, or other nested terminal elements.\nThis only affects the initial window size of any new window. Changing this\nvalue will not affect the size of the window after it has been created. This\nis only used for the initial size.\n\nBUG: On Linux with GTK, the calculated window size will not properly take\ninto account window decorations. As a result, the grid dimensions will not\nexactly match this configuration. If window decorations are disabled (see\n`window-decoration`), then this will work as expected.\n\nWindows smaller than 10 wide by 4 high are not allowed.",
     "default_value": "0",
     "option_type": "number",
     "valid_values": null,
@@ -1955,12 +2017,14 @@
   },
   {
     "name": "window-position-y",
-    "description": "",
+    "description": "The starting window position. This position is in pixels and is relative\nto the top-left corner of the primary monitor. Both values must be set to take\neffect. If only one value is set, it is ignored.\n\nNote that the window manager may put limits on the position or override\nthe position. For example, a tiling window manager may force the window\nto be a certain position to fit within the grid. There is nothing Ghostty\nwill do about this, but it will make an effort.\n\nAlso note that negative values are also up to the operating system and\nwindow manager. Some window managers may not allow windows to be placed\noff-screen.\n\nInvalid positions are runtime-specific, but generally the positions are\nclamped to the nearest valid position.\n\nOn macOS, the window position is relative to the top-left corner of\nthe visible screen area. This means that if the menu bar is visible, the\nwindow will be placed below the menu bar.\n\nNote: this is only supported on macOS. The GTK runtime does not support\nsetting the window position, as windows are only allowed position\nthemselves in X11 and not Wayland.",
     "default_value": "",
     "option_type": "string",
     "valid_values": null,
     "category": "window",
-    "platform": null,
+    "platform": [
+      "macos"
+    ],
     "reloadable": true,
     "repeatable": false,
     "search_terms": [
@@ -1975,8 +2039,12 @@
     "name": "window-save-state",
     "description": "Whether to enable saving and restoring window state. Window state includes\ntheir position, size, tabs, splits, etc. Some window state requires shell\nintegration, such as preserving working directories. See `shell-integration`\nfor more information.\n\nThere are three valid values for this configuration:\n\n  * `default` will use the default system behavior. On macOS, this\n    will only save state if the application is forcibly terminated\n    or if it is configured systemwide via Settings.app.\n\n  * `never` will never save window state.\n\n  * `always` will always save window state whenever Ghostty is exited.\n\nIf you change this value to `never` while Ghostty is not running, the next\nGhostty launch will NOT restore the window state.\n\nIf you change this value to `default` while Ghostty is not running and the\nprevious exit saved state, the next Ghostty launch will still restore the\nwindow state. This is because Ghostty cannot know if the previous exit was\ndue to a forced save or not (macOS doesn't provide this information).\n\nIf you change this value so that window state is saved while Ghostty is not\nrunning, the previous window state will not be restored because Ghostty only\nsaves state on exit if this is enabled.\n\nThe default value is `default`.\n\nThis is currently only supported on macOS. This has no effect on Linux.",
     "default_value": "default",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "default",
+      "never",
+      "always"
+    ],
     "category": "window",
     "platform": [
       "macos"
@@ -2013,8 +2081,11 @@
     "name": "window-new-tab-position",
     "description": "The position where new tabs are created. Valid values:\n\n  * `current` - Insert the new tab after the currently focused tab,\n    or at the end if there are no focused tabs.\n\n  * `end` - Insert the new tab at the end of the tab list.",
     "default_value": "current",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "current",
+      "end"
+    ],
     "category": "window",
     "platform": null,
     "reloadable": true,
@@ -2089,8 +2160,12 @@
     "name": "resize-overlay",
     "description": "This controls when resize overlays are shown. Resize overlays are a\ntransient popup that shows the size of the terminal while the surfaces are\nbeing resized. The possible options are:\n\n  * `always` - Always show resize overlays.\n  * `never` - Never show resize overlays.\n  * `after-first` - The resize overlay will not appear when the surface\n                    is first created, but will show up if the surface is\n                    subsequently resized.\n\nThe default is `after-first`.",
     "default_value": "after-first",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "always",
+      "never",
+      "after-first"
+    ],
     "category": "window",
     "platform": null,
     "reloadable": true,
@@ -2108,8 +2183,16 @@
     "name": "resize-overlay-position",
     "description": "If resize overlays are enabled, this controls the position of the overlay.\nThe possible options are:\n\n  * `center`\n  * `top-left`\n  * `top-center`\n  * `top-right`\n  * `bottom-left`\n  * `bottom-center`\n  * `bottom-right`\n\nThe default is `center`.",
     "default_value": "center",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "center",
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ],
     "category": "window",
     "platform": null,
     "reloadable": true,
@@ -2163,8 +2246,12 @@
     "name": "clipboard-read",
     "description": "Whether to allow programs running in the terminal to read/write to the\nsystem clipboard (OSC 52, for googling). The default is to allow clipboard\nreading after prompting the user and allow writing unconditionally.\n\nValid values are:\n\n  * `ask`\n  * `allow`\n  * `deny`",
     "default_value": "ask",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "ask",
+      "allow",
+      "deny"
+    ],
     "category": "clipboard",
     "platform": null,
     "reloadable": true,
@@ -2183,10 +2270,14 @@
   },
   {
     "name": "clipboard-write",
-    "description": "",
+    "description": "Whether to allow programs running in the terminal to read/write to the\nsystem clipboard (OSC 52, for googling). The default is to allow clipboard\nreading after prompting the user and allow writing unconditionally.\n\nValid values are:\n\n  * `ask`\n  * `allow`\n  * `deny`",
     "default_value": "allow",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "ask",
+      "allow",
+      "deny"
+    ],
     "category": "clipboard",
     "platform": null,
     "reloadable": true,
@@ -2313,8 +2404,14 @@
     "name": "right-click-action",
     "description": "The action to take when the user right-clicks on the terminal surface.\n\nValid values:\n  * `context-menu` - Show the context menu.\n  * `paste` - Paste the contents of the clipboard.\n  * `copy` - Copy the selected text to the clipboard.\n  * `copy-or-paste` - If there is a selection, copy the selected text to\n     the clipboard; otherwise, paste the contents of the clipboard.\n  * `ignore` - Do nothing, ignore the right-click.\n\nThe default value is `context-menu`.",
     "default_value": "context-menu",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "context-menu",
+      "paste",
+      "copy",
+      "copy-or-paste",
+      "ignore"
+    ],
     "category": "mouse",
     "platform": null,
     "reloadable": true,
@@ -2480,8 +2577,14 @@
     "name": "quick-terminal-position",
     "description": "The position of the \"quick\" terminal window. To learn more about the\nquick terminal, see the documentation for the `toggle_quick_terminal`\nbinding action.\n\nValid values are:\n\n  * `top` - Terminal appears at the top of the screen.\n  * `bottom` - Terminal appears at the bottom of the screen.\n  * `left` - Terminal appears at the left of the screen.\n  * `right` - Terminal appears at the right of the screen.\n  * `center` - Terminal appears at the center of the screen.\n\nOn macOS, changing this configuration requires restarting Ghostty\ncompletely.\n\nNote: There is no default keybind for toggling the quick terminal.\nTo enable this feature, bind the `toggle_quick_terminal` action to a key.",
     "default_value": "top",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "top",
+      "bottom",
+      "left",
+      "right",
+      "center"
+    ],
     "category": "quick-terminal",
     "platform": null,
     "reloadable": true,
@@ -2501,10 +2604,15 @@
   },
   {
     "name": "gtk-quick-terminal-layer",
-    "description": "The size of the quick terminal.\n\nThe size can be specified either as a percentage of the screen dimensions\n(height/width), or as an absolute size in pixels. Percentage values are\nsuffixed with `%` (e.g. `20%`) while pixel values are suffixed with `px`\n(e.g. `300px`). A bare value without a suffix is a config error.\n\nWhen only one size is specified, the size parameter affects the size of\nthe quick terminal on its *primary axis*, which depends on its position:\nheight for quick terminals placed on the top or bottom, and width for left\nor right. The primary axis of a centered quick terminal depends on the\nmonitor's orientation: height when on a landscape monitor, and width when\non a portrait monitor.\n\nThe *secondary axis* would be maximized for non-center positioned\nquick terminals unless another size parameter is specified, separated\nfrom the first by a comma (`,`). Percentage and pixel sizes can be mixed\ntogether: for instance, a size of `50%,500px` for a top-positioned quick\nterminal would be half a screen tall, and 500 pixels wide.\n\nAvailable since: 1.2.0\nThe layer of the quick terminal window. The higher the layer,\nthe more windows the quick terminal may conceal.\n\nValid values are:\n\n * `overlay`\n\n   The quick terminal appears in front of all windows.\n\n * `top` (default)\n\n   The quick terminal appears in front of normal windows but behind\n   fullscreen overlays like lock screens.\n\n * `bottom`\n\n   The quick terminal appears behind normal windows but in front of\n   wallpapers and other windows in the background layer.\n\n * `background`\n\n   The quick terminal appears behind all windows.\n\nGTK Wayland only.\n\nAvailable since: 1.2.0",
+    "description": "The layer of the quick terminal window. The higher the layer,\nthe more windows the quick terminal may conceal.\n\nValid values are:\n\n * `overlay`\n\n   The quick terminal appears in front of all windows.\n\n * `top` (default)\n\n   The quick terminal appears in front of normal windows but behind\n   fullscreen overlays like lock screens.\n\n * `bottom`\n\n   The quick terminal appears behind normal windows but in front of\n   wallpapers and other windows in the background layer.\n\n * `background`\n\n   The quick terminal appears behind all windows.\n\nGTK Wayland only.\n\nAvailable since: 1.2.0",
     "default_value": "top",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "overlay",
+      "top",
+      "bottom",
+      "background"
+    ],
     "category": "gtk",
     "platform": [
       "linux"
@@ -2547,8 +2655,12 @@
     "name": "quick-terminal-screen",
     "description": "The screen where the quick terminal should show up.\n\nValid values are:\n\n * `main` - The screen that the operating system recommends as the main\n   screen. On macOS, this is the screen that is currently receiving\n   keyboard input. This screen is defined by the operating system and\n   not chosen by Ghostty.\n\n * `mouse` - The screen that the mouse is currently hovered over.\n\n * `macos-menu-bar` - The screen that contains the macOS menu bar as\n   set in the display settings on macOS. This is a bit confusing because\n   every screen on macOS has a menu bar, but this is the screen that\n   contains the primary menu bar.\n\nThe default value is `main` because this is the recommended screen\nby the operating system.\n\nOnly implemented on macOS.",
     "default_value": "main",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "main",
+      "mouse",
+      "macos-menu-bar"
+    ],
     "category": "quick-terminal",
     "platform": null,
     "reloadable": true,
@@ -2611,8 +2723,11 @@
     "name": "quick-terminal-space-behavior",
     "description": "This configuration option determines the behavior of the quick terminal\nwhen switching between macOS spaces. macOS spaces are virtual desktops\nthat can be manually created or are automatically created when an\napplication is in full-screen mode.\n\nValid values are:\n\n * `move` - When switching to another space, the quick terminal will\n   also moved to the current space.\n\n * `remain` - The quick terminal will stay only in the space where it\n   was originally opened and will not follow when switching to another\n   space.\n\nThe default value is `move`.\n\nOnly implemented on macOS.\nOn Linux the behavior is always equivalent to `move`.\n\nAvailable since: 1.1.0",
     "default_value": "move",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "move",
+      "remain"
+    ],
     "category": "quick-terminal",
     "platform": null,
     "reloadable": true,
@@ -2629,8 +2744,12 @@
     "name": "quick-terminal-keyboard-interactivity",
     "description": "Determines under which circumstances that the quick terminal should receive\nkeyboard input. See the corresponding [Wayland documentation](https://wayland.app/protocols/wlr-layer-shell-unstable-v1#zwlr_layer_surface_v1:enum:keyboard_interactivity)\nfor a more detailed explanation of the behavior of each option.\n\n> [!NOTE]\n> The exact behavior of each option may differ significantly across\n> compositors -- experiment with them on your system to find one that\n> suits your liking!\n\nValid values are:\n\n * `none`\n\n   The quick terminal will not receive any keyboard input.\n\n * `on-demand` (default)\n\n   The quick terminal would only receive keyboard input when it is focused.\n\n * `exclusive`\n\n   The quick terminal will always receive keyboard input, even when another\n   window is currently focused.\n\nOnly has an effect on Linux Wayland.\nOn macOS the behavior is always equivalent to `on-demand`.\n\nAvailable since: 1.2.0",
     "default_value": "on-demand",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "none",
+      "on-demand",
+      "exclusive"
+    ],
     "category": "quick-terminal",
     "platform": null,
     "reloadable": true,
@@ -2647,8 +2766,15 @@
     "name": "shell-integration",
     "description": "Whether to enable shell integration auto-injection or not. Shell integration\ngreatly enhances the terminal experience by enabling a number of features:\n\n  * Working directory reporting so new tabs, splits inherit the\n    previous terminal's working directory.\n\n  * Prompt marking that enables the \"jump_to_prompt\" keybinding.\n\n  * If you're sitting at a prompt, closing a terminal will not ask\n    for confirmation.\n\n  * Resizing the window with a complex prompt usually paints much\n    better.\n\nAllowable values are:\n\n  * `none` - Do not do any automatic injection. You can still manually\n    configure your shell to enable the integration.\n\n  * `detect` - Detect the shell based on the filename.\n\n  * `bash`, `elvish`, `fish`, `zsh` - Use this specific shell injection scheme.\n\nThe default value is `detect`.",
     "default_value": "detect",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "none",
+      "detect",
+      "bash",
+      "elvish",
+      "fish",
+      "zsh"
+    ],
     "category": "shell-integration",
     "platform": null,
     "reloadable": true,
@@ -2668,7 +2794,14 @@
     "description": "Shell integration features to enable. These require our shell integration\nto be loaded, either automatically via shell-integration or manually.\n\nThe format of this is a list of features to enable separated by commas. If\nyou prefix a feature with `no-` then it is disabled. If you omit a feature,\nits default value is used, so you must explicitly disable features you don't\nwant. You can also use `true` or `false` to turn all features on or off.\n\nExample: `cursor`, `no-cursor`, `sudo`, `no-sudo`, `title`, `no-title`\n\nAvailable features:\n\n  * `cursor` - Set the cursor to a blinking bar at the prompt.\n\n  * `sudo` - Set sudo wrapper to preserve terminfo.\n\n  * `title` - Set the window title via shell integration.\n\n  * `ssh-env` - Enable SSH environment variable compatibility. Automatically\n    converts TERM from `xterm-ghostty` to `xterm-256color` when connecting to\n    remote hosts and propagates COLORTERM, TERM_PROGRAM, and TERM_PROGRAM_VERSION.\n    Whether or not these variables will be accepted by the remote host(s) will\n    depend on whether or not the variables are allowed in their sshd_config.\n    (Available since: 1.2.0)\n\n  * `ssh-terminfo` - Enable automatic terminfo installation on remote hosts.\n    Attempts to install Ghostty's terminfo entry using `infocmp` and `tic` when\n    connecting to hosts that lack it. Requires `infocmp` to be available locally\n    and `tic` to be available on remote hosts. Once terminfo is installed on a\n    remote host, it will be automatically \"cached\" to avoid repeat installations.\n    If desired, the `+ssh-cache` CLI action can be used to manage the installation\n    cache manually using various arguments.\n    (Available since: 1.2.0)\n\n  * `path` - Add Ghostty's binary directory to PATH. This ensures the `ghostty`\n    command is available in the shell even if shell init scripts reset PATH.\n    This is particularly useful on macOS where PATH is often overridden by\n    system scripts. The directory is only added if not already present.\n\nSSH features work independently and can be combined for optimal experience:\nwhen both `ssh-env` and `ssh-terminfo` are enabled, Ghostty will install its\nterminfo on remote hosts and use `xterm-ghostty` as TERM, falling back to\n`xterm-256color` with environment variables if terminfo installation fails.",
     "default_value": "cursor,no-sudo,title,no-ssh-env,no-ssh-terminfo,path",
     "option_type": "string",
-    "valid_values": null,
+    "valid_values": [
+      "cursor",
+      "sudo",
+      "title",
+      "ssh-env",
+      "ssh-terminfo",
+      "path"
+    ],
     "category": "shell-integration",
     "platform": null,
     "reloadable": true,
@@ -2701,8 +2834,12 @@
     "name": "osc-color-report-format",
     "description": "Sets the reporting format for OSC sequences that request color information.\nGhostty currently supports OSC 10 (foreground), OSC 11 (background), and\nOSC 4 (256 color palette) queries, and by default the reported values\nare scaled-up RGB values, where each component are 16 bits. This is how\nmost terminals report these values. However, some legacy applications may\nrequire 8-bit, unscaled, components. We also support turning off reporting\naltogether. The components are lowercase hex values.\n\nAllowable values are:\n\n  * `none` - OSC 4/10/11 queries receive no reply\n\n  * `8-bit` - Color components are return unscaled, e.g. `rr/gg/bb`\n\n  * `16-bit` - Color components are returned scaled, e.g. `rrrr/gggg/bbbb`\n\nThe default value is `16-bit`.",
     "default_value": "16-bit",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "none",
+      "8-bit",
+      "16-bit"
+    ],
     "category": "compatibility",
     "platform": null,
     "reloadable": true,
@@ -2774,7 +2911,13 @@
     "description": "Bell features to enable if bell support is available in your runtime. Not\nall features are available on all runtimes. The format of this is a list of\nfeatures to enable separated by commas. If you prefix a feature with `no-`\nthen it is disabled. If you omit a feature, its default value is used.\n\nValid values are:\n\n * `system`\n\n   Instruct the system to notify the user using built-in system functions.\n   This could result in an audiovisual effect, a notification, or something\n   else entirely. Changing these effects require altering system settings:\n   for instance under the \"Sound > Alert Sound\" setting in GNOME,\n   or the \"Accessibility > System Bell\" settings in KDE Plasma. (GTK only)\n\n * `audio`\n\n   Play a custom sound. (GTK only)\n\n * `attention` *(enabled by default)*\n\n   Request the user's attention when Ghostty is unfocused, until it has\n   received focus again. On macOS, this will bounce the app icon in the\n   dock once. On Linux, the behavior depends on the desktop environment\n   and/or the window manager/compositor:\n\n   - On KDE, the background of the desktop icon in the task bar would be\n     highlighted;\n\n   - On GNOME, you may receive a notification that, when clicked, would\n     bring the Ghostty window into focus;\n\n   - On Sway, the window may be decorated with a distinctly colored border;\n\n   - On other systems this may have no effect at all.\n\n * `title` *(enabled by default)*\n\n   Prepend a bell emoji (\ud83d\udd14) to the title of the alerted surface until the\n   terminal is re-focused or interacted with (such as on keyboard input).\n\n * `border`\n\n   Display a border around the alerted surface until the terminal is\n   re-focused or interacted with (such as on keyboard input).\n\n   GTK only.\n\nExample: `audio`, `no-audio`, `system`, `no-system`\n\nAvailable since: 1.2.0",
     "default_value": "no-system,no-audio,attention,title,no-border",
     "option_type": "string",
-    "valid_values": null,
+    "valid_values": [
+      "system",
+      "audio",
+      "attention",
+      "title",
+      "border"
+    ],
     "category": "color",
     "platform": null,
     "reloadable": true,
@@ -2866,8 +3009,11 @@
     "name": "macos-window-buttons",
     "description": "Whether the window buttons in the macOS titlebar are visible. The window\nbuttons are the colored buttons in the upper left corner of most macOS apps,\nalso known as the traffic lights, that allow you to close, miniaturize, and\nzoom the window.\n\nThis setting has no effect when `window-decoration = false` or\n`macos-titlebar-style = hidden`, as the window buttons are always hidden in\nthese modes.\n\nValid values are:\n\n  * `visible` - Show the window buttons.\n  * `hidden` - Hide the window buttons.\n\nThe default value is `visible`.\n\nChanging this option at runtime only applies to new windows.\n\nAvailable since: 1.2.0",
     "default_value": "visible",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "visible",
+      "hidden"
+    ],
     "category": "macos",
     "platform": [
       "macos"
@@ -2910,8 +3056,11 @@
     "name": "macos-titlebar-proxy-icon",
     "description": "Whether the proxy icon in the macOS titlebar is visible. The proxy icon\nis the icon that represents the folder of the current working directory.\nYou can see this very clearly in the macOS built-in Terminal.app\ntitlebar.\n\nThe proxy icon is only visible with the native macOS titlebar style.\n\nValid values are:\n\n  * `visible` - Show the proxy icon.\n  * `hidden` - Hide the proxy icon.\n\nThe default value is `visible`.\n\nThis setting can be changed at runtime and will affect all currently\nopen windows but only after their working directory changes again.\nTherefore, to make this work after changing the setting, you must\nusually `cd` to a different directory, open a different file in an\neditor, etc.",
     "default_value": "visible",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "visible",
+      "hidden"
+    ],
     "category": "macos",
     "platform": [
       "macos"
@@ -2930,8 +3079,11 @@
     "name": "macos-dock-drop-behavior",
     "description": "Controls the windowing behavior when dropping a file or folder\nonto the Ghostty icon in the macOS dock.\n\nValid values are:\n\n  * `new-tab` - Create a new tab in the current window, or open\n    a new window if none exist.\n  * `window` - Create a new window unconditionally.\n\nThe default value is `new-tab`.\n\nThis setting is only supported on macOS and has no effect on other\nplatforms.",
     "default_value": "new-tab",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "new-tab",
+      "window"
+    ],
     "category": "macos",
     "platform": [
       "macos"
@@ -2990,8 +3142,11 @@
     "name": "macos-hidden",
     "description": "If true, the macOS icon in the dock and app switcher will be hidden. This is\nmainly intended for those primarily using the quick-terminal mode.\n\nNote that setting this to true means that keyboard layout changes\nwill no longer be automatic.\n\nControl whether macOS app is excluded from the dock and app switcher,\na \"hidden\" state. This is mainly intended for those primarily using\nquick-terminal mode, but is a general configuration for any use\ncase.\n\nAvailable values:\n\n  * `never` - The macOS app is never hidden.\n  * `always` - The macOS app is always hidden.\n\nNote: When the macOS application is hidden, keyboard layout changes\nwill no longer be automatic. This is a limitation of macOS.\n\nAvailable since: 1.2.0",
     "default_value": "never",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "never",
+      "always"
+    ],
     "category": "macos",
     "platform": [
       "macos"
@@ -3059,8 +3214,17 @@
     "name": "macos-icon",
     "description": "Customize the macOS app icon.\n\nThis only affects the icon that appears in the dock, application\nswitcher, etc. This does not affect the icon in Finder because\nthat is controlled by a hardcoded value in the signed application\nbundle and can't be changed at runtime. For more details on what\nexactly is affected, see the `NSApplication.icon` Apple documentation;\nthat is the API that is being used to set the icon.\n\nValid values:\n\n * `official` - Use the official Ghostty icon.\n * `blueprint`, `chalkboard`, `microchip`, `glass`, `holographic`,\n   `paper`, `retro`, `xray` - Official variants of the Ghostty icon\n   hand-created by artists (no AI).\n * `custom` - Use a completely custom icon. The location must be specified\n   using the additional `macos-custom-icon` configuration\n * `custom-style` - Use the official Ghostty icon but with custom\n   styles applied to various layers. The custom styles must be\n   specified using the additional `macos-icon`-prefixed configurations.\n   The `macos-icon-ghost-color` and `macos-icon-screen-color`\n   configurations are required for this style.\n\nWARNING: The `custom-style` option is _experimental_. We may change\nthe format of the custom styles in the future. We're still finalizing\nthe exact layers and customization options that will be available.\n\nOther caveats:\n\n  * The icon in the update dialog will always be the official icon.\n    This is because the update dialog is managed through a\n    separate framework and cannot be customized without significant\n    effort.",
     "default_value": "official",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "official",
+      "blueprint",
+      "chalkboard",
+      "microchip",
+      "glass",
+      "holographic",
+      "custom",
+      "custom-style"
+    ],
     "category": "macos",
     "platform": [
       "macos"
@@ -3107,8 +3271,13 @@
     "name": "macos-icon-frame",
     "description": "The material to use for the frame of the macOS app icon.\n\nValid values:\n\n * `aluminum` - A brushed aluminum frame. This is the default.\n * `beige` - A classic 90's computer beige frame.\n * `plastic` - A glossy, dark plastic frame.\n * `chrome` - A shiny chrome frame.\n\nNote: This configuration is required when `macos-icon` is set to\n`custom-style`.",
     "default_value": "aluminum",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "aluminum",
+      "beige",
+      "plastic",
+      "chrome"
+    ],
     "category": "macos",
     "platform": [
       "macos"
@@ -3169,8 +3338,12 @@
     "name": "macos-shortcuts",
     "description": "Whether macOS Shortcuts are allowed to control Ghostty.\n\nGhostty exposes a number of actions that allow Shortcuts to\ncontrol and interact with Ghostty. This includes creating new\nterminals, sending text to terminals, running commands, invoking\nany keybind action, etc.\n\nThis is a powerful feature but can be a security risk if a malicious\nshortcut is able to be installed and executed. Therefore, this\nconfiguration allows you to disable this feature.\n\nValid values are:\n\n* `ask` - Ask the user whether for permission. Ghostty will remember\n  this choice and never ask again. This is similar to other macOS\n  permissions such as microphone access, camera access, etc.\n\n* `allow` - Allow Shortcuts to control Ghostty without asking.\n\n* `deny` - Deny Shortcuts from controlling Ghostty.\n\nAvailable since: 1.2.0",
     "default_value": "ask",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "ask",
+      "allow",
+      "deny"
+    ],
     "category": "macos",
     "platform": [
       "macos"
@@ -3387,8 +3560,12 @@
     "name": "gtk-toolbar-style",
     "description": "Determines the appearance of the top and bottom bars tab bar.\n\nValid values are:\n\n * `flat` - Top and bottom bars are flat with the terminal window.\n * `raised` - Top and bottom bars cast a shadow on the terminal area.\n * `raised-border` - Similar to `raised` but the shadow is replaced with a\n   more subtle border.",
     "default_value": "raised",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "flat",
+      "raised",
+      "raised-border"
+    ],
     "category": "gtk",
     "platform": [
       "linux"
@@ -3545,8 +3722,12 @@
     "name": "async-backend",
     "description": "Configures the low-level API to use for async IO, eventing, etc.\n\nMost users should leave this set to `auto`. This will automatically detect\nscenarios where APIs may not be available (for example `io_uring` on\ncertain hardened kernels) and fall back to a different API. However, if\nyou want to force a specific backend for any reason, you can set this\nhere.\n\nBased on various benchmarks, we haven't found a statistically significant\ndifference between the backends with regards to memory, CPU, or latency.\nThe choice of backend is more about compatibility and features.\n\nAvailable options:\n\n  * `auto` - Automatically choose the best backend for the platform\n    based on available options.\n  * `epoll` - Use the `epoll` API\n  * `io_uring` - Use the `io_uring` API\n\nIf the selected backend is not available on the platform, Ghostty will\nfall back to an automatically chosen backend that is available.\n\nChanging this value requires a full application restart to take effect.\n\nThis is only supported on Linux, since this is the only platform\nwhere we have multiple options. On macOS, we always use `kqueue`.\n\nAvailable since: 1.2.0",
     "default_value": "auto",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "auto",
+      "epoll",
+      "io_uring"
+    ],
     "category": "general",
     "platform": [
       "linux"
@@ -3563,8 +3744,12 @@
     "name": "auto-update",
     "description": "Control the auto-update functionality of Ghostty. This is only supported\non macOS currently, since Linux builds are distributed via package\nmanagers that are not centrally controlled by Ghostty.\n\nChecking or downloading an update does not send any information to\nthe project beyond standard network information mandated by the\nunderlying protocols. To put it another way: Ghostty doesn't explicitly\nadd any tracking to the update process. The update process works by\ndownloading information about the latest version and comparing it\nclient-side to the current version.\n\nValid values are:\n\n * `off` - Disable auto-updates.\n * `check` - Check for updates and notify the user if an update is\n   available, but do not automatically download or install the update.\n * `download` - Check for updates, automatically download the update,\n   notify the user, but do not automatically install the update.\n\nIf unset, we defer to Sparkle's default behavior, which respects the\npreference stored in the standard user defaults (`defaults(1)`).\n\nChanging this value at runtime works after a small delay.",
     "default_value": "",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "off",
+      "check",
+      "download"
+    ],
     "category": "general",
     "platform": null,
     "reloadable": true,
@@ -3581,8 +3766,11 @@
     "name": "auto-update-channel",
     "description": "The release channel to use for auto-updates.\n\nThe default value of this matches the release channel of the currently\nrunning Ghostty version. If you download a pre-release version of Ghostty\nthen this will be set to `tip` and you will receive pre-release updates.\nIf you download a stable version of Ghostty then this will be set to\n`stable` and you will receive stable updates.\n\nValid values are:\n\n * `stable` - Stable, tagged releases such as \"1.0.0\".\n * `tip` - Pre-release versions generated from each commit to the\n   main branch. This is the version that was in use during private\n   beta testing by thousands of people. It is generally stable but\n   will likely have more bugs than the stable channel.\n\nChanging this configuration requires a full restart of\nGhostty to take effect.\n\nThis only works on macOS since only macOS has an auto-update feature.",
     "default_value": "",
-    "option_type": "string",
-    "valid_values": null,
+    "option_type": "enum",
+    "valid_values": [
+      "stable",
+      "tip"
+    ],
     "category": "general",
     "platform": null,
     "reloadable": false,
