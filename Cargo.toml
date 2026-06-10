@@ -10,7 +10,7 @@ authors = ["Dani Flores"]
 keywords = ["mcp", "ghostty", "terminal", "configuration"]
 
 [dependencies]
-rmcp = { version = "0.16", features = ["server", "transport-io", "macros"] }
+rmcp = { version = "1.7", features = ["server", "transport-io", "macros"] }
 # Only the runtime and the #[tokio::main] macro are used directly; rmcp's
 # transport-io feature pulls the tokio I/O features it needs itself.
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
