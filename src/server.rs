@@ -71,6 +71,16 @@ impl GhosttyServer {
         }
     }
 
+    /// Construct a server bound to an explicit config path (handler tests).
+    #[cfg(test)]
+    fn with_config_path(config_path: String) -> Self {
+        Self {
+            options: options::load_options(),
+            config_path,
+            tool_router: Self::tool_router(),
+        }
+    }
+
     #[tool(
         description = "Search Ghostty configuration options using fuzzy matching. Returns top matching options with name, short description, default value, and category. Use this to find options by concept (e.g. 'transparent', 'font size', 'padding')."
     )]
@@ -724,5 +734,251 @@ mod tests {
 
         // Should contain reload note
         assert!(instructions.contains("CONFIG RELOAD"));
+    }
+
+    // --- MCP tool handler tests -------------------------------------------
+
+    fn text_of(result: &CallToolResult) -> String {
+        result
+            .content
+            .iter()
+            .filter_map(|c| c.raw.as_text().map(|t| t.text.clone()))
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    fn server_with_config(contents: &str) -> (tempfile::TempDir, GhosttyServer, String) {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("config");
+        std::fs::write(&path, contents).unwrap();
+        let path_str = path.to_string_lossy().to_string();
+        let server = GhosttyServer::with_config_path(path_str.clone());
+        (dir, server, path_str)
+    }
+
+    #[test]
+    fn tool_surface_is_stable() {
+        // Contract test: renaming or dropping a tool breaks MCP clients.
+        let router = GhosttyServer::tool_router();
+        let mut names: Vec<String> = router
+            .list_all()
+            .into_iter()
+            .map(|t| t.name.to_string())
+            .collect();
+        names.sort();
+        assert_eq!(
+            names,
+            [
+                "get_option",
+                "list_categories",
+                "read_config",
+                "remove_config",
+                "search_config",
+                "validate_config",
+                "write_config",
+            ]
+        );
+        for tool in GhosttyServer::tool_router().list_all() {
+            assert!(
+                tool.description.is_some_and(|d| !d.is_empty()),
+                "tool {} must have a description",
+                tool.name
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn read_config_returns_set_options() {
+        let (_dir, server, _) = server_with_config("font-size = 14\ntheme = dark\n");
+        let result = server
+            .read_config(Parameters(ReadConfigParams { option: None }))
+            .await
+            .unwrap();
+        assert_ne!(result.is_error, Some(true));
+        let text = text_of(&result);
+        assert!(text.contains("font-size"));
+        assert!(text.contains("14"));
+        assert!(text.contains("theme"));
+    }
+
+    #[tokio::test]
+    async fn read_config_single_option_with_default() {
+        let (_dir, server, _) = server_with_config("font-size = 14\n");
+        let result = server
+            .read_config(Parameters(ReadConfigParams {
+                option: Some("font-size".to_string()),
+            }))
+            .await
+            .unwrap();
+        let text = text_of(&result);
+        assert!(text.contains("14"));
+    }
+
+    #[tokio::test]
+    async fn read_config_missing_file_is_not_an_error() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("nonexistent-config");
+        let server = GhosttyServer::with_config_path(path.to_string_lossy().to_string());
+        let result = server
+            .read_config(Parameters(ReadConfigParams { option: None }))
+            .await
+            .unwrap();
+        assert_ne!(
+            result.is_error,
+            Some(true),
+            "a missing config means Ghostty defaults, not a tool error"
+        );
+    }
+
+    #[tokio::test]
+    async fn write_config_updates_existing_option() {
+        let (_dir, server, path) = server_with_config("font-size = 14\n");
+        let result = server
+            .write_config(Parameters(WriteConfigParams {
+                option: "font-size".to_string(),
+                value: "16".to_string(),
+            }))
+            .await
+            .unwrap();
+        assert_ne!(result.is_error, Some(true));
+        let on_disk = std::fs::read_to_string(&path).unwrap();
+        assert!(on_disk.contains("font-size = 16"));
+        assert!(!on_disk.contains("font-size = 14"));
+    }
+
+    #[tokio::test]
+    async fn write_config_appends_repeatable_option() {
+        let (_dir, server, path) = server_with_config("keybind = ctrl+a=new_tab\n");
+        let result = server
+            .write_config(Parameters(WriteConfigParams {
+                option: "keybind".to_string(),
+                value: "ctrl+b=new_window".to_string(),
+            }))
+            .await
+            .unwrap();
+        assert_ne!(result.is_error, Some(true));
+        let on_disk = std::fs::read_to_string(&path).unwrap();
+        assert!(on_disk.contains("ctrl+a=new_tab"));
+        assert!(on_disk.contains("ctrl+b=new_window"));
+    }
+
+    #[tokio::test]
+    async fn write_config_rejects_invalid_enum_value() {
+        let (_dir, server, path) = server_with_config("");
+        let result = server
+            .write_config(Parameters(WriteConfigParams {
+                option: "cursor-style".to_string(),
+                value: "banana".to_string(),
+            }))
+            .await
+            .unwrap();
+        assert_eq!(
+            result.is_error,
+            Some(true),
+            "invalid enum values must be rejected: {}",
+            text_of(&result)
+        );
+        let on_disk = std::fs::read_to_string(&path).unwrap();
+        assert!(
+            !on_disk.contains("banana"),
+            "rejected value must not be written"
+        );
+    }
+
+    #[tokio::test]
+    async fn write_config_unknown_option_writes_with_warning() {
+        // Deliberate forward-compatibility: the embedded data may lag behind
+        // a newer Ghostty, so unknown options are written with a warning
+        // instead of being rejected.
+        let (_dir, server, path) = server_with_config("");
+        let result = server
+            .write_config(Parameters(WriteConfigParams {
+                option: "definitely-not-an-option".to_string(),
+                value: "x".to_string(),
+            }))
+            .await
+            .unwrap();
+        assert_ne!(result.is_error, Some(true));
+        assert!(text_of(&result).to_lowercase().contains("unknown option"));
+        let on_disk = std::fs::read_to_string(&path).unwrap();
+        assert!(on_disk.contains("definitely-not-an-option = x"));
+    }
+
+    #[tokio::test]
+    async fn remove_config_comments_out_option() {
+        let (_dir, server, path) = server_with_config("font-size = 14\n");
+        let result = server
+            .remove_config(Parameters(RemoveConfigParams {
+                option: "font-size".to_string(),
+                value: None,
+            }))
+            .await
+            .unwrap();
+        assert_ne!(result.is_error, Some(true));
+        let on_disk = std::fs::read_to_string(&path).unwrap();
+        assert!(on_disk.contains('#'), "removed option is kept as a comment");
+        let config = parser::read_config(&path).unwrap();
+        assert_eq!(config.get("font-size"), None);
+    }
+
+    #[tokio::test]
+    async fn validate_config_accepts_valid_single_value() {
+        let (_dir, server, _) = server_with_config("");
+        let result = server
+            .validate_config(Parameters(ValidateConfigParams {
+                option: Some("cursor-style".to_string()),
+                value: Some("block".to_string()),
+            }))
+            .await
+            .unwrap();
+        assert_ne!(result.is_error, Some(true));
+    }
+
+    #[tokio::test]
+    async fn validate_config_flags_invalid_file_entries() {
+        let (_dir, server, _) =
+            server_with_config("cursor-style = banana\nnot-a-real-option = 1\n");
+        let result = server
+            .validate_config(Parameters(ValidateConfigParams {
+                option: None,
+                value: None,
+            }))
+            .await
+            .unwrap();
+        let text = text_of(&result);
+        assert!(
+            text.contains("banana") || text.contains("cursor-style"),
+            "invalid enum value must be reported: {text}"
+        );
+        assert!(
+            text.contains("not-a-real-option"),
+            "unknown option must be reported: {text}"
+        );
+    }
+
+    #[tokio::test]
+    async fn get_option_unknown_suggests_alternatives() {
+        let (_dir, server, _) = server_with_config("");
+        let result = server
+            .get_option(Parameters(GetOptionParams {
+                name: "font-siz".to_string(),
+            }))
+            .await
+            .unwrap();
+        assert_eq!(result.is_error, Some(true));
+        assert!(text_of(&result).contains("font-size"));
+    }
+
+    #[tokio::test]
+    async fn search_config_finds_by_concept() {
+        let (_dir, server, _) = server_with_config("");
+        let result = server
+            .search_config(Parameters(SearchConfigParams {
+                query: "transparent".to_string(),
+                category: None,
+            }))
+            .await
+            .unwrap();
+        assert!(text_of(&result).contains("background-opacity"));
     }
 }
