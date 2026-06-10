@@ -84,9 +84,15 @@ impl GhosttyServer {
     /// Construct a server bound to an explicit config path (handler tests).
     #[cfg(test)]
     fn with_config_path(config_path: String) -> Self {
+        let config_dir = Path::new(&config_path)
+            .parent()
+            .unwrap_or(Path::new("."))
+            .to_string_lossy()
+            .to_string();
         Self {
             options: options::load_options(),
             config_path,
+            config_dir,
             tool_router: Self::tool_router(),
         }
     }
@@ -322,13 +328,10 @@ impl GhosttyServer {
 
                     // Collect options by source file, preserving order
                     let mut by_file: Vec<(String, Vec<(String, String)>)> = Vec::new();
-                    let mut file_index: std::collections::HashMap<String, usize> =
-                        std::collections::HashMap::new();
 
                     // Primary first
                     let primary_map = tree.primary.to_map();
                     if !primary_map.is_empty() {
-                        file_index.insert(tree.primary.path.clone(), 0);
                         let mut entries = Vec::new();
                         for (key, values) in &primary_map {
                             for v in values {
@@ -343,8 +346,6 @@ impl GhosttyServer {
                         if let Some(ref config) = inc.config {
                             let inc_map = config.to_map();
                             if !inc_map.is_empty() {
-                                let idx = by_file.len();
-                                file_index.insert(config.path.clone(), idx);
                                 let mut entries = Vec::new();
                                 for (key, values) in &inc_map {
                                     for v in values {
@@ -433,8 +434,7 @@ impl GhosttyServer {
         // Determine target file using config tree
         let tree = self.read_tree()?;
         let category = known.map(|o| o.category.as_str()).unwrap_or("");
-        let target_path =
-            modules::resolve_write_target(&tree, &params.option, category, &self.config_dir);
+        let target_path = modules::resolve_write_target(&tree, &params.option, category);
 
         let mut config = parser::read_config(&target_path).map_err(|e| McpError {
             code: ErrorCode::INTERNAL_ERROR,
@@ -1096,8 +1096,10 @@ mod tests {
         assert_eq!(
             names,
             [
+                "create_config_module",
                 "get_option",
                 "list_categories",
+                "list_config_files",
                 "read_config",
                 "remove_config",
                 "search_config",

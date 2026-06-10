@@ -251,28 +251,26 @@ pub fn read_config_tree(path: &str) -> anyhow::Result<ConfigTree> {
         std::fs::canonicalize(path).unwrap_or_else(|_| std::path::PathBuf::from(path));
     visited.insert(canonical_primary.to_string_lossy().to_string());
 
-    let primary_dir = Path::new(path).parent().unwrap_or(Path::new("."));
-    collect_includes(&primary, primary_dir, path, &mut includes, &mut visited)?;
+    let primary_dir = Path::new(path)
+        .parent()
+        .unwrap_or(Path::new("."))
+        .to_path_buf();
 
-    Ok(ConfigTree { primary, includes })
-}
+    // Ghostty processes config-file directives as a queue: a file's includes
+    // load after the entire file containing them, in declaration order, and
+    // includes discovered while loading append to the end. The resulting
+    // flat order is the load order, so later entries override earlier ones.
+    let mut queue: std::collections::VecDeque<(String, std::path::PathBuf, String)> = primary
+        .get_all("config-file")
+        .into_iter()
+        .map(|d| (d, primary_dir.clone(), path.to_string()))
+        .collect();
 
-/// Recursively collect includes from a config file (depth-first post-order).
-fn collect_includes(
-    config: &ConfigFile,
-    base_dir: &Path,
-    included_from: &str,
-    includes: &mut Vec<IncludedFile>,
-    visited: &mut HashSet<String>,
-) -> anyhow::Result<()> {
-    let directives: Vec<String> = config.get_all("config-file");
-
-    for directive in directives {
-        let (optional, raw_path) = if let Some(stripped) = directive.strip_prefix('?') {
-            (true, stripped.to_string())
-        } else {
-            (false, directive.clone())
-        };
+    while let Some((directive, base_dir, included_from)) = queue.pop_front() {
+        let (optional, raw_path) = parse_include_directive(&directive);
+        if raw_path.is_empty() {
+            continue;
+        }
 
         // Resolve path relative to the declaring file's directory
         let resolved = if Path::new(&raw_path).is_absolute() {
@@ -300,17 +298,18 @@ fn collect_includes(
         match std::fs::read_to_string(&resolved) {
             Ok(contents) => {
                 let inc_config = ConfigFile::parse(&contents, &resolved_str);
-                let inc_dir = resolved.parent().unwrap_or(Path::new("."));
+                let inc_dir = resolved.parent().unwrap_or(Path::new(".")).to_path_buf();
 
-                // Recurse into this file's includes first (depth-first)
-                collect_includes(&inc_config, inc_dir, &resolved_str, includes, visited)?;
+                for nested in inc_config.get_all("config-file") {
+                    queue.push_back((nested, inc_dir.clone(), resolved_str.clone()));
+                }
 
                 includes.push(IncludedFile {
                     directive: directive.clone(),
                     resolved_path: resolved_str,
                     optional,
                     config: Some(inc_config),
-                    included_from: included_from.to_string(),
+                    included_from,
                 });
             }
             Err(e) if e.kind() == std::io::ErrorKind::NotFound && optional => {
@@ -319,7 +318,7 @@ fn collect_includes(
                     resolved_path: resolved_str,
                     optional,
                     config: None,
-                    included_from: included_from.to_string(),
+                    included_from,
                 });
             }
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
@@ -333,7 +332,23 @@ fn collect_includes(
         }
     }
 
-    Ok(())
+    Ok(ConfigTree { primary, includes })
+}
+
+/// Parse a config-file directive value: a leading '?' marks the include
+/// optional, and the remaining path may be wrapped in double quotes (the
+/// quoting Ghostty requires for paths starting with a literal '?').
+fn parse_include_directive(directive: &str) -> (bool, String) {
+    let (optional, rest) = match directive.strip_prefix('?') {
+        Some(stripped) => (true, stripped),
+        None => (false, directive),
+    };
+    let rest = rest.trim();
+    let unquoted = rest
+        .strip_prefix('"')
+        .and_then(|r| r.strip_suffix('"'))
+        .unwrap_or(rest);
+    (optional, unquoted.to_string())
 }
 
 #[cfg(test)]
@@ -528,11 +543,11 @@ mod tests {
         std::fs::write(&a_path, "font-size = 14\nconfig-file = b\n").unwrap();
 
         let tree = read_config_tree(a_path.to_str().unwrap()).unwrap();
-        // C is loaded first (depth-first post-order), then B
-        // Precedence: B > C > A (B is declared last in includes order)
-        // But depth-first post-order: C first, then B. So B overrides C.
+        // Ghostty load order: a, then a's includes (b), then b's includes
+        // (c). Files loaded later override earlier ones, so c wins.
         let effective = tree.get("font-size").unwrap();
-        assert_eq!(effective.value, "16");
+        assert_eq!(effective.value, "18");
+        assert!(effective.source_file.contains('c'));
     }
 
     #[test]
@@ -649,5 +664,90 @@ mod tests {
 
         // config-file is also a key-value pair
         assert!(map.contains_key("config-file"));
+    }
+
+    #[test]
+    fn nested_include_wins_over_its_parent_include() {
+        // Ghostty defers config-file loading: a file's includes apply after
+        // the file itself, recursively. The docs example: if the primary
+        // sets a value and an include overrides it, the include wins -- and
+        // the same holds one level deeper.
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("grandchild"), "font-size = 20\n").unwrap();
+        std::fs::write(
+            dir.path().join("child"),
+            "config-file = grandchild\nfont-size = 16\n",
+        )
+        .unwrap();
+        let primary = dir.path().join("config");
+        std::fs::write(&primary, "config-file = child\nfont-size = 14\n").unwrap();
+
+        let tree = read_config_tree(primary.to_str().unwrap()).unwrap();
+        let value = tree.get("font-size").unwrap();
+        assert_eq!(value.value, "20", "grandchild loads last and must win");
+        assert!(value.source_file.contains("grandchild"));
+    }
+
+    #[test]
+    fn includes_load_in_queue_order_across_siblings() {
+        // Ghostty processes config-file directives as a queue: primary's
+        // includes load in declaration order, and includes discovered while
+        // loading them append to the end. [primary, a, b, c] here, so c
+        // (queued while loading a, after b was already queued) loads last.
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("c"), "font-size = 3\n").unwrap();
+        std::fs::write(dir.path().join("a"), "config-file = c\nfont-size = 1\n").unwrap();
+        std::fs::write(dir.path().join("b"), "font-size = 2\n").unwrap();
+        let primary = dir.path().join("config");
+        std::fs::write(&primary, "config-file = a\nconfig-file = b\n").unwrap();
+
+        let tree = read_config_tree(primary.to_str().unwrap()).unwrap();
+        assert_eq!(tree.get("font-size").unwrap().value, "3");
+        let order: Vec<&str> = tree.includes.iter().map(|i| i.directive.as_str()).collect();
+        assert_eq!(order, vec!["a", "b", "c"]);
+    }
+
+    #[test]
+    fn quoted_include_paths_are_unquoted() {
+        // Ghostty supports double-quoted paths (required for paths starting
+        // with a literal '?').
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("fonts"), "font-size = 16\n").unwrap();
+        let primary = dir.path().join("config");
+        std::fs::write(&primary, "config-file = \"fonts\"\n").unwrap();
+
+        let tree = read_config_tree(primary.to_str().unwrap()).unwrap();
+        assert_eq!(tree.includes.len(), 1);
+        assert_eq!(tree.get("font-size").unwrap().value, "16");
+    }
+
+    #[test]
+    fn optional_prefix_composes_with_quotes() {
+        let dir = tempfile::tempdir().unwrap();
+        let primary = dir.path().join("config");
+        std::fs::write(
+            &primary,
+            "config-file = ?\"missing-file\"\nfont-size = 14\n",
+        )
+        .unwrap();
+
+        let tree = read_config_tree(primary.to_str().unwrap()).unwrap();
+        assert_eq!(tree.get("font-size").unwrap().value, "14");
+        assert!(tree.includes[0].optional);
+        assert!(tree.includes[0].config.is_none());
+    }
+
+    #[test]
+    fn empty_config_file_directive_is_ignored() {
+        // `config-file =` with no value must not resolve to the config
+        // directory itself (which fails with IsADirectory and breaks every
+        // tool against an otherwise valid config).
+        let dir = tempfile::tempdir().unwrap();
+        let primary = dir.path().join("config");
+        std::fs::write(&primary, "config-file =\nfont-size = 14\n").unwrap();
+
+        let tree = read_config_tree(primary.to_str().unwrap()).unwrap();
+        assert_eq!(tree.get("font-size").unwrap().value, "14");
+        assert!(tree.includes.is_empty());
     }
 }

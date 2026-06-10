@@ -15,12 +15,7 @@ const MODULE_MAPPINGS: &[(&str, &[&str])] = &[
 /// 2. If a module file for this category is included, route there
 /// 3. Special: if category is appearance/color AND theme is set, skip theme module
 /// 4. Fall back to primary config
-pub fn resolve_write_target(
-    tree: &ConfigTree,
-    option_name: &str,
-    option_category: &str,
-    config_dir: &str,
-) -> String {
+pub fn resolve_write_target(tree: &ConfigTree, option_name: &str, option_category: &str) -> String {
     // 1. If the option already exists in an included file, write there
     for inc in &tree.includes {
         if let Some(ref config) = inc.config {
@@ -37,7 +32,7 @@ pub fn resolve_write_target(
             return tree.primary.path.clone();
         }
 
-        if let Some(path) = find_module_include(tree, module_name, config_dir) {
+        if let Some(path) = find_module_include(tree, module_name) {
             return path;
         }
     }
@@ -58,7 +53,7 @@ fn module_for_category(category: &str) -> Option<&'static str> {
 
 /// Find an included file that matches a module name.
 /// Checks if any include's resolved path has a filename matching the module name.
-fn find_module_include(tree: &ConfigTree, module_name: &str, _config_dir: &str) -> Option<String> {
+fn find_module_include(tree: &ConfigTree, module_name: &str) -> Option<String> {
     for inc in &tree.includes {
         if inc.config.is_some() {
             let path = std::path::Path::new(&inc.resolved_path);
@@ -94,7 +89,7 @@ mod tests {
         std::fs::write(&primary, "font-size = 14\n").unwrap();
 
         let tree = read_config_tree(primary.to_str().unwrap()).unwrap();
-        let target = resolve_write_target(&tree, "font-size", "font", dir.path().to_str().unwrap());
+        let target = resolve_write_target(&tree, "font-size", "font");
         assert_eq!(target, primary.to_str().unwrap());
     }
 
@@ -108,8 +103,7 @@ mod tests {
         std::fs::write(&primary, "config-file = my-custom-keybinds\n").unwrap();
 
         let tree = read_config_tree(primary.to_str().unwrap()).unwrap();
-        let target =
-            resolve_write_target(&tree, "keybind", "keybind", dir.path().to_str().unwrap());
+        let target = resolve_write_target(&tree, "keybind", "keybind");
         assert!(target.contains("my-custom-keybinds"));
     }
 
@@ -123,8 +117,7 @@ mod tests {
         std::fs::write(&primary, "config-file = keybinds\n").unwrap();
 
         let tree = read_config_tree(primary.to_str().unwrap()).unwrap();
-        let target =
-            resolve_write_target(&tree, "keybind", "keybind", dir.path().to_str().unwrap());
+        let target = resolve_write_target(&tree, "keybind", "keybind");
         assert!(target.contains("keybinds"));
     }
 
@@ -139,12 +132,7 @@ mod tests {
 
         let tree = read_config_tree(primary.to_str().unwrap()).unwrap();
         // appearance option should go to primary, not theme module
-        let target = resolve_write_target(
-            &tree,
-            "window-theme",
-            "appearance",
-            dir.path().to_str().unwrap(),
-        );
+        let target = resolve_write_target(&tree, "window-theme", "appearance");
         assert_eq!(target, primary.to_str().unwrap());
     }
 
@@ -158,12 +146,7 @@ mod tests {
         std::fs::write(&primary, "config-file = theme\n").unwrap();
 
         let tree = read_config_tree(primary.to_str().unwrap()).unwrap();
-        let target = resolve_write_target(
-            &tree,
-            "window-theme",
-            "appearance",
-            dir.path().to_str().unwrap(),
-        );
+        let target = resolve_write_target(&tree, "window-theme", "appearance");
         assert!(target.contains("theme"));
     }
 
@@ -178,7 +161,7 @@ mod tests {
 
         let tree = read_config_tree(primary.to_str().unwrap()).unwrap();
         // "shell" category is not mapped to any module
-        let target = resolve_write_target(&tree, "command", "shell", dir.path().to_str().unwrap());
+        let target = resolve_write_target(&tree, "command", "shell");
         assert_eq!(target, primary.to_str().unwrap());
     }
 
@@ -194,8 +177,7 @@ mod tests {
 
         let tree = read_config_tree(primary.to_str().unwrap()).unwrap();
         // Even though there's no "keybinds" module, the option exists in work-keybinds
-        let target =
-            resolve_write_target(&tree, "keybind", "keybind", dir.path().to_str().unwrap());
+        let target = resolve_write_target(&tree, "keybind", "keybind");
         assert!(target.contains("work-keybinds"));
     }
 
