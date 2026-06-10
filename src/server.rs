@@ -11,18 +11,24 @@ use crate::tools::*;
 
 /// Resolve the Ghostty config file path using a fallback chain:
 /// 1. GHOSTTY_CONFIG_PATH env var (highest priority)
-/// 2. /config/ghostty if /config exists (Docker mount point)
+/// 2. /config/ghostty/config if /config exists (the Docker wrapper mounts
+///    the host config directory at /config/ghostty)
 /// 3. XDG_CONFIG_HOME/ghostty/config
 /// 4. ~/Library/Application Support/com.mitchellh.ghostty/config (macOS)
 /// 5. ~/.config/ghostty/config (default)
 pub fn resolve_config_path() -> String {
+    resolve_config_path_from(std::env::var("GHOSTTY_CONFIG_PATH").ok(), "/config")
+}
+
+fn resolve_config_path_from(env_override: Option<String>, docker_base: &str) -> String {
     // 1. Env var override (highest priority)
-    if let Ok(path) = std::env::var("GHOSTTY_CONFIG_PATH") {
+    if let Some(path) = env_override {
         return path;
     }
-    // 2. Docker mount point (if /config exists, we're in Docker)
-    if std::path::Path::new("/config").exists() {
-        return "/config/ghostty".to_string();
+    // 2. Docker mount point. install.sh mounts the host config DIRECTORY at
+    //    {docker_base}/ghostty, so the config FILE is one level below it.
+    if std::path::Path::new(docker_base).exists() {
+        return format!("{}/ghostty/config", docker_base);
     }
     // 3. XDG_CONFIG_HOME
     if let Ok(xdg) = std::env::var("XDG_CONFIG_HOME") {
@@ -41,7 +47,7 @@ pub fn resolve_config_path() -> String {
         // Default: ~/.config/ghostty/config (works on macOS and Linux)
         return format!("{}/.config/ghostty/config", home);
     }
-    "/config/ghostty".to_string()
+    format!("{}/ghostty/config", docker_base)
 }
 
 #[derive(Clone)]
@@ -599,7 +605,13 @@ impl ServerHandler for GhosttyServer {
         ServerInfo {
             protocol_version: ProtocolVersion::V_2024_11_05,
             capabilities: ServerCapabilities::builder().enable_tools().build(),
-            server_info: Implementation::from_build_env(),
+            // from_build_env() would report rmcp's own name/version because
+            // the env! macros expand inside the rmcp crate.
+            server_info: Implementation {
+                name: env!("CARGO_PKG_NAME").to_string(),
+                version: env!("CARGO_PKG_VERSION").to_string(),
+                ..Implementation::from_build_env()
+            },
             instructions: Some(self.build_instructions()),
         }
     }
@@ -638,6 +650,34 @@ mod tests {
         let path = resolve_config_path();
         assert!(!path.is_empty());
         assert!(path.contains("ghostty") || path.contains("config"));
+    }
+
+    #[test]
+    fn resolve_config_path_docker_mount_points_to_config_file() {
+        // install.sh mounts the host config DIRECTORY at <base>/ghostty, so
+        // the resolved path must be the config FILE inside it. Resolving the
+        // directory itself made every config tool fail with IsADirectory
+        // (shipped broken since v0.1.0).
+        let tmp = tempfile::tempdir().unwrap();
+        let base = tmp.path().to_str().unwrap();
+        let path = resolve_config_path_from(None, base);
+        assert_eq!(path, format!("{base}/ghostty/config"));
+    }
+
+    #[test]
+    fn resolve_config_path_env_override_beats_docker_mount() {
+        let tmp = tempfile::tempdir().unwrap();
+        let base = tmp.path().to_str().unwrap();
+        let path = resolve_config_path_from(Some("/tmp/override".to_string()), base);
+        assert_eq!(path, "/tmp/override");
+    }
+
+    #[test]
+    fn server_info_identifies_as_ghostty_mcp() {
+        let server = GhosttyServer::new();
+        let info = server.get_info();
+        assert_eq!(info.server_info.name, "ghostty-mcp");
+        assert_eq!(info.server_info.version, env!("CARGO_PKG_VERSION"));
     }
 
     #[test]

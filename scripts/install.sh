@@ -69,13 +69,16 @@ fi
 # Pull latest in background (updates image for next session)
 docker pull "$IMAGE" &>/dev/null &
 
-# Run with current cached image
-exec docker run -i --rm -v "$CONFIG_DIR:/config/ghostty" "$IMAGE"
+# Run with current cached image. --user makes files written to the bind
+# mount owned by the invoking user instead of root.
+exec docker run -i --rm --user "$(id -u):$(id -g)" -v "$CONFIG_DIR:/config/ghostty" "$IMAGE"
 WRAPPER_EOF
 chmod +x "$WRAPPER"
 
-# Register with Claude Code (points to wrapper, not direct docker run)
+# Register with Claude Code (points to wrapper, not direct docker run).
+# Remove any previous registration first so re-running the installer works.
 echo "Registering MCP server..."
+claude mcp remove ghostty-mcp --scope user >/dev/null 2>&1 || true
 claude mcp add ghostty-mcp --scope user -- "$WRAPPER"
 
 echo ""
