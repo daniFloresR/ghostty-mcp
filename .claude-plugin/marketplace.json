@@ -1,0 +1,23 @@
+{
+  "name": "ghostty-mcp",
+  "owner": {
+    "name": "Dani Flores"
+  },
+  "description": "Ghostty terminal configuration tools for Claude Code",
+  "plugins": [
+    {
+      "name": "ghostty",
+      "source": "./plugins/ghostty",
+      "description": "Search, read, write, and validate Ghostty terminal configuration (200 options) via the ghostty-mcp server",
+      "version": "0.5.1",
+      "author": {
+        "name": "Dani Flores"
+      },
+      "homepage": "https://github.com/daniFloresR/ghostty-mcp",
+      "repository": "https://github.com/daniFloresR/ghostty-mcp",
+      "license": "MIT",
+      "category": "tools",
+      "keywords": ["ghostty", "terminal", "configuration", "mcp"]
+    }
+  ]
+}

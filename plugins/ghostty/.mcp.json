@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "ghostty": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/launch-ghostty-mcp.sh"
+    }
+  }
+}

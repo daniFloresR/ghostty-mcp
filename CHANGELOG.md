@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- Claude Code plugin marketplace: `claude plugin marketplace add daniFloresR/ghostty-mcp` then `claude plugin install ghostty@ghostty-mcp`. The plugin launches the published Docker image with the host config mounted and auto-refreshes it in the background.
+
 ## [0.5.1] - 2026-06-10
 
 ### Fixed

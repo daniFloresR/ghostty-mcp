@@ -14,7 +14,16 @@ MCP server for [Ghostty](https://ghostty.org) terminal configuration. Search, re
 
 ## Install
 
-### Option 1: Docker (recommended)
+### Option 1: Claude Code plugin (recommended)
+
+```bash
+claude plugin marketplace add daniFloresR/ghostty-mcp
+claude plugin install ghostty@ghostty-mcp
+```
+
+Or interactively inside a session: `/plugin marketplace add daniFloresR/ghostty-mcp` then `/plugin install ghostty@ghostty-mcp`. The plugin launches the published Docker image (~1.5MB) and keeps it updated in the background; requires Docker.
+
+### Option 2: Docker via install script
 
 ```bash
 # One-line install
@@ -23,7 +32,7 @@ curl -fsSL https://raw.githubusercontent.com/daniFloresR/ghostty-mcp/main/script
 
 This installs a wrapper script at `~/.local/bin/ghostty-mcp` that auto-updates the Docker image in the background on each Claude Code startup.
 
-### Option 2: Build from source (no Docker)
+### Option 3: Build from source (no Docker)
 
 ```bash
 cargo install --git https://github.com/daniFloresR/ghostty-mcp
@@ -38,7 +47,7 @@ When running natively, the server auto-detects your config path:
 
 ## Updating
 
-- **Docker**: Updates happen automatically. Each Claude Code startup pulls the latest image in the background. The update takes effect on the next session.
+- **Plugin / Docker**: Updates happen automatically. Each Claude Code startup pulls the latest image in the background. The update takes effect on the next session.
 - **Source**: Run `cargo install --force --git https://github.com/daniFloresR/ghostty-mcp` to update manually.
 
 ## Usage with Claude Code

@@ -34,18 +34,21 @@ The argument is the semver bump type: `patch`, `minor`, or `major`. Default to `
 3. **Update `Cargo.toml`** with the new version.
 4. **Update `server.json`**: set the top-level `version` and the version tag
    in `packages[0].identifier` to the new version (CI fails on drift).
-5. **Update `Cargo.lock`** by running `cargo check`.
-6. **Update `CHANGELOG.md`** at the project root:
+5. **Update plugin manifests**: set `version` in
+   `plugins/ghostty/.claude-plugin/plugin.json` and in the `ghostty` entry of
+   `.claude-plugin/marketplace.json` (CI fails on drift).
+6. **Update `Cargo.lock`** by running `cargo check`.
+7. **Update `CHANGELOG.md`** at the project root:
    - Add a new section under `## [Unreleased]` with the new version and today's date.
    - Move any items from `[Unreleased]` into the new version section.
    - If `[Unreleased]` is empty, ask the user what changed before proceeding.
-7. **Create branch** `release/vX.Y.Z` from current HEAD.
-8. **Run `cargo fmt --check`** -- stop if it fails.
-9. **Run `cargo clippy --all-targets --locked -- -D warnings`** -- stop if it fails.
-10. **Run `cargo test --locked`** -- stop if it fails.
-11. **Commit** all changes with message: `release: vX.Y.Z`
-12. **Push** the branch to origin.
-13. **Create PR** targeting `main` using `gh pr create`:
+8. **Create branch** `release/vX.Y.Z` from current HEAD.
+9. **Run `cargo fmt --check`** -- stop if it fails.
+10. **Run `cargo clippy --all-targets --locked -- -D warnings`** -- stop if it fails.
+11. **Run `cargo test --locked`** -- stop if it fails.
+12. **Commit** all changes with message: `release: vX.Y.Z`
+13. **Push** the branch to origin.
+14. **Create PR** targeting `main` using `gh pr create`:
     - Title: `Release vX.Y.Z`
     - Body: include the changelog entry for this version.
 
