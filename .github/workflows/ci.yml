@@ -38,6 +38,19 @@ jobs:
       - name: Tests
         run: cargo test --locked --verbose
 
+      - name: Data pipeline tests
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
+
+      - name: Data reproducibility
+        run: |
+          python3 scripts/parse_docs.py data/ghostty-docs-raw.txt /tmp/regenerated.json
+          if ! diff -q data/ghostty-options.json /tmp/regenerated.json; then
+            echo "ERROR: data/ghostty-options.json does not match the parser output."
+            echo "It was either hand-edited or the parser changed without regenerating."
+            echo "Run: python3 scripts/parse_docs.py data/ghostty-docs-raw.txt data/ghostty-options.json"
+            exit 1
+          fi
+
   docker:
     runs-on: ubuntu-latest
     timeout-minutes: 20
