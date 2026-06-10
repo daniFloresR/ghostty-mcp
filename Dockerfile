@@ -7,7 +7,6 @@ WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY src/ src/
 COPY data/ data/
-COPY scripts/ scripts/
 RUN cargo build --release --locked
 
 # Stage 2: Minimal runtime

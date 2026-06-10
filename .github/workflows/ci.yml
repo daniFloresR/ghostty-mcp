@@ -51,6 +51,16 @@ jobs:
             exit 1
           fi
 
+      - name: server.json version matches Cargo.toml
+        run: |
+          CARGO_V=$(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)
+          JSON_V=$(python3 -c "import json; print(json.load(open('server.json'))['version'])")
+          OCI_TAG=$(python3 -c "import json; print(json.load(open('server.json'))['packages'][0]['identifier'].split(':')[-1])")
+          if [ "$CARGO_V" != "$JSON_V" ] || [ "$CARGO_V" != "$OCI_TAG" ]; then
+            echo "ERROR: version drift: Cargo.toml=$CARGO_V server.json=$JSON_V oci-tag=$OCI_TAG"
+            exit 1
+          fi
+
   docker:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -68,3 +78,31 @@ jobs:
             echo "ERROR: Image exceeds 10MB limit"
             exit 1
           fi
+
+      - name: Smoke test config tools against a mounted config dir
+        # Runs the image exactly as the install.sh wrapper does and exercises
+        # the read and write paths end-to-end. Guards against the v0.1.0
+        # regression where /config/ghostty resolved to the directory itself
+        # and every config tool failed with IsADirectory.
+        run: |
+          SMOKE_DIR=$(mktemp -d)
+          printf 'font-size = 14\n' > "$SMOKE_DIR/config"
+
+          REQS='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"smoke","version":"0.0.0"}}}
+          {"jsonrpc":"2.0","method":"notifications/initialized"}
+          {"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"read_config","arguments":{}}}
+          {"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"write_config","arguments":{"option":"font-size","value":"15"}}}'
+
+          # Hold stdin open briefly after the last request: the server shuts
+          # down on stdin EOF and would otherwise race its own responses.
+          OUT=$({ echo "$REQS"; sleep 3; } | timeout 60 docker run -i --rm --user "$(id -u):$(id -g)" -v "$SMOKE_DIR:/config/ghostty" ghostty-mcp:ci)
+          echo "$OUT"
+
+          echo "$OUT" | grep -q '"id":2' || { echo "ERROR: no read_config response"; exit 1; }
+          echo "$OUT" | grep -q '"id":3' || { echo "ERROR: no write_config response"; exit 1; }
+          if echo "$OUT" | grep -q '"error"'; then
+            echo "ERROR: a tool call returned an error"
+            exit 1
+          fi
+          echo "$OUT" | grep -q 'font-size' || { echo "ERROR: read_config did not return config contents"; exit 1; }
+          grep -q 'font-size = 15' "$SMOKE_DIR/config" || { echo "ERROR: write_config did not update the mounted file"; exit 1; }

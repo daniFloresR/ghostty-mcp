@@ -11,7 +11,9 @@ keywords = ["mcp", "ghostty", "terminal", "configuration"]
 
 [dependencies]
 rmcp = { version = "0.16", features = ["server", "transport-io", "macros"] }
-tokio = { version = "1", features = ["full"] }
+# Only the runtime and the #[tokio::main] macro are used directly; rmcp's
+# transport-io feature pulls the tokio I/O features it needs itself.
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 schemars = "1"
@@ -28,3 +30,6 @@ opt-level = "z"
 lto = true
 strip = true
 codegen-units = 1
+# No unwinding needed: a panic in a stdio MCP server kills the transport
+# either way, and abort drops the landing-pad code from the binary.
+panic = "abort"
