@@ -48,3 +48,10 @@ pub struct ValidateConfigParams {
     /// Value to validate against the option's type constraints.
     pub value: Option<String>,
 }
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct CreateConfigModuleParams {
+    /// The module name to create (e.g. "keybinds", "fonts", "theme").
+    /// Must not contain '/', '\', or '.'.
+    pub name: String,
+}

@@ -4,10 +4,12 @@ use rmcp::{
     tool, tool_handler, tool_router, ErrorData as McpError, ServerHandler,
 };
 
-use crate::config::{parser, validator, writer};
+use crate::config::{modules, parser, validator, writer};
 use crate::data::options::{self, GhosttyOption};
 use crate::search;
 use crate::tools::*;
+
+use std::path::Path;
 
 /// Resolve the Ghostty config file path using a fallback chain:
 /// 1. GHOSTTY_CONFIG_PATH env var (highest priority)
@@ -54,6 +56,7 @@ fn resolve_config_path_from(env_override: Option<String>, docker_base: &str) -> 
 pub struct GhosttyServer {
     options: Vec<GhosttyOption>,
     config_path: String,
+    config_dir: String,
     tool_router: ToolRouter<Self>,
 }
 
@@ -62,11 +65,18 @@ impl GhosttyServer {
     pub fn new() -> Self {
         let options = options::load_options();
         let config_path = resolve_config_path();
+        let config_dir = Path::new(&config_path)
+            .parent()
+            .unwrap_or(Path::new("."))
+            .to_string_lossy()
+            .to_string();
         tracing::info!("Loaded {} Ghostty options", options.len());
         tracing::info!("Config path: {}", config_path);
+        tracing::info!("Config dir: {}", config_dir);
         Self {
             options,
             config_path,
+            config_dir,
             tool_router: Self::tool_router(),
         }
     }
@@ -235,18 +245,14 @@ impl GhosttyServer {
     }
 
     #[tool(
-        description = "Read the current Ghostty configuration. If 'option' is specified, returns just that option's value. If omitted, returns all set options. Shows both the current value and default."
+        description = "Read the current Ghostty configuration. If 'option' is specified, returns just that option's value (with source file if from an include). If omitted, returns all set options grouped by source file. Shows both the current value and default."
     )]
     async fn read_config(
         &self,
         params: Parameters<ReadConfigParams>,
     ) -> Result<CallToolResult, McpError> {
         let params = params.0;
-        let config = parser::read_config(&self.config_path).map_err(|e| McpError {
-            code: ErrorCode::INTERNAL_ERROR,
-            message: format!("Failed to read config: {}", e).into(),
-            data: None,
-        })?;
+        let tree = self.read_tree()?;
 
         match params.option {
             Some(option_name) => {
@@ -256,18 +262,34 @@ impl GhosttyServer {
                 let mut output = format!("# {} -- Current Value\n\n", option_name);
 
                 if is_repeatable {
-                    let all = config.get_all(&option_name);
+                    let all = tree.get_all(&option_name);
                     if all.is_empty() {
                         output.push_str("**Not set** (using default)\n");
                     } else {
                         output.push_str(&format!("**{} entries set:**\n", all.len()));
-                        for v in &all {
-                            output.push_str(&format!("- `{}`\n", v));
+                        for av in &all {
+                            if av.source_file != self.config_path {
+                                output.push_str(&format!(
+                                    "- `{}` (from {})\n",
+                                    av.value,
+                                    Self::short_path(&av.source_file)
+                                ));
+                            } else {
+                                output.push_str(&format!("- `{}`\n", av.value));
+                            }
                         }
                     }
                 } else {
-                    match config.get(&option_name) {
-                        Some(v) => output.push_str(&format!("**Set to:** `{}`\n", v)),
+                    match tree.get(&option_name) {
+                        Some(av) => {
+                            output.push_str(&format!("**Set to:** `{}`\n", av.value));
+                            if av.source_file != self.config_path {
+                                output.push_str(&format!(
+                                    "**Source:** {}\n",
+                                    Self::short_path(&av.source_file)
+                                ));
+                            }
+                        }
                         None => output.push_str("**Not set** (using default)\n"),
                     }
                 }
@@ -284,36 +306,98 @@ impl GhosttyServer {
                 Ok(CallToolResult::success(vec![Content::text(output)]))
             }
             None => {
-                let map = config.to_map();
+                let annotated_map = tree.to_annotated_map();
 
-                if map.is_empty() {
+                if annotated_map.is_empty() {
                     return Ok(CallToolResult::success(vec![Content::text(
                         "# Ghostty Configuration\n\nConfig file is empty or not found. All options are using defaults.\n\nUse `write_config` to set options, or `search_config` to find options.",
                     )]));
                 }
 
-                let mut output = format!(
-                    "# Current Ghostty Configuration\n\n{} options set:\n\n",
-                    map.len()
-                );
+                // Group by source file for display
+                let has_includes = !tree.includes.is_empty();
 
-                for (key, values) in &map {
-                    if values.len() == 1 {
-                        output.push_str(&format!("{} = {}\n", key, values[0]));
-                    } else {
-                        for v in values {
-                            output.push_str(&format!("{} = {}\n", key, v));
+                if has_includes {
+                    let mut output = String::from("# Current Ghostty Configuration\n\n");
+
+                    // Collect options by source file, preserving order
+                    let mut by_file: Vec<(String, Vec<(String, String)>)> = Vec::new();
+                    let mut file_index: std::collections::HashMap<String, usize> =
+                        std::collections::HashMap::new();
+
+                    // Primary first
+                    let primary_map = tree.primary.to_map();
+                    if !primary_map.is_empty() {
+                        file_index.insert(tree.primary.path.clone(), 0);
+                        let mut entries = Vec::new();
+                        for (key, values) in &primary_map {
+                            for v in values {
+                                entries.push((key.clone(), v.clone()));
+                            }
+                        }
+                        by_file.push((tree.primary.path.clone(), entries));
+                    }
+
+                    // Then each include
+                    for inc in &tree.includes {
+                        if let Some(ref config) = inc.config {
+                            let inc_map = config.to_map();
+                            if !inc_map.is_empty() {
+                                let idx = by_file.len();
+                                file_index.insert(config.path.clone(), idx);
+                                let mut entries = Vec::new();
+                                for (key, values) in &inc_map {
+                                    for v in values {
+                                        entries.push((key.clone(), v.clone()));
+                                    }
+                                }
+                                by_file.push((config.path.clone(), entries));
+                            }
                         }
                     }
-                }
 
-                Ok(CallToolResult::success(vec![Content::text(output)]))
+                    let total_options: usize = by_file.iter().map(|(_, e)| e.len()).sum();
+                    output.push_str(&format!(
+                        "{} options set across {} files:\n\n",
+                        total_options,
+                        by_file.len()
+                    ));
+
+                    for (path, entries) in &by_file {
+                        output.push_str(&format!("## {}\n\n", Self::short_path(path)));
+                        for (key, value) in entries {
+                            output.push_str(&format!("{} = {}\n", key, value));
+                        }
+                        output.push('\n');
+                    }
+
+                    Ok(CallToolResult::success(vec![Content::text(output)]))
+                } else {
+                    // Single file: simple output (backward compatible)
+                    let map = tree.primary.to_map();
+                    let mut output = format!(
+                        "# Current Ghostty Configuration\n\n{} options set:\n\n",
+                        map.len()
+                    );
+
+                    for (key, values) in &map {
+                        if values.len() == 1 {
+                            output.push_str(&format!("{} = {}\n", key, values[0]));
+                        } else {
+                            for v in values {
+                                output.push_str(&format!("{} = {}\n", key, v));
+                            }
+                        }
+                    }
+
+                    Ok(CallToolResult::success(vec![Content::text(output)]))
+                }
             }
         }
     }
 
     #[tool(
-        description = "Set a Ghostty configuration option. For repeatable options (keybind, palette, etc.), appends a new entry instead of overwriting. For non-repeatable options, updates the existing value or adds it. The value is validated before writing. Changes take effect on config reload (Cmd+Shift+, on macOS)."
+        description = "Set a Ghostty configuration option. For repeatable options (keybind, palette, etc.), appends a new entry instead of overwriting. For non-repeatable options, updates the existing value or adds it. The value is validated before writing. In modular configs, automatically routes writes to the correct file based on category. Changes take effect on config reload (Cmd+Shift+, on macOS)."
     )]
     async fn write_config(
         &self,
@@ -346,7 +430,13 @@ impl GhosttyServer {
             ));
         }
 
-        let mut config = parser::read_config(&self.config_path).map_err(|e| McpError {
+        // Determine target file using config tree
+        let tree = self.read_tree()?;
+        let category = known.map(|o| o.category.as_str()).unwrap_or("");
+        let target_path =
+            modules::resolve_write_target(&tree, &params.option, category, &self.config_dir);
+
+        let mut config = parser::read_config(&target_path).map_err(|e| McpError {
             code: ErrorCode::INTERNAL_ERROR,
             message: format!("Failed to read config: {}", e).into(),
             data: None,
@@ -354,23 +444,34 @@ impl GhosttyServer {
 
         let is_repeatable = known.is_some_and(|o| o.repeatable);
 
+        let target_label = if target_path != self.config_path {
+            format!(" in {}", Self::short_path(&target_path))
+        } else {
+            String::new()
+        };
+
         let mut output = if is_repeatable {
-            let appended = writer::append_option(&mut config, &params.option, &params.value);
-            if !appended {
+            // Check for duplicates across all files, not just the target
+            let all_existing = tree.get_all(&params.option);
+            if all_existing.iter().any(|av| av.value == params.value) {
                 return Ok(CallToolResult::error(vec![Content::text(format!(
                     "Duplicate: `{} = {}` already exists in config.",
                     params.option, params.value
                 ))]));
             }
-            let count = config.get_all(&params.option).len();
+            writer::append_option(&mut config, &params.option, &params.value);
+            let count = all_existing.len() + 1;
             format!(
-                "Appended `{} = {}`\n({} total entries)\n",
-                params.option, params.value, count
+                "Appended `{} = {}`{}\n({} total entries)\n",
+                params.option, params.value, target_label, count
             )
         } else {
             let previous = config.get(&params.option);
             writer::set_option(&mut config, &params.option, &params.value);
-            let mut out = format!("Set `{} = {}`\n", params.option, params.value);
+            let mut out = format!(
+                "Set `{} = {}`{}\n",
+                params.option, params.value, target_label
+            );
             if let Some(prev) = previous {
                 out.push_str(&format!("Previous value: `{}`\n", prev));
             } else {
@@ -402,56 +503,112 @@ impl GhosttyServer {
     }
 
     #[tool(
-        description = "Remove a Ghostty configuration option by commenting it out. For repeatable options (keybind, palette, etc.), provide 'value' to remove a specific entry; omit 'value' to remove all entries. The line is preserved as a comment for reference."
+        description = "Remove a Ghostty configuration option by commenting it out. For repeatable options (keybind, palette, etc.), provide 'value' to remove a specific entry; omit 'value' to remove all entries. The line is preserved as a comment for reference. In modular configs, operates on the correct file(s)."
     )]
     async fn remove_config(
         &self,
         params: Parameters<RemoveConfigParams>,
     ) -> Result<CallToolResult, McpError> {
         let params = params.0;
-        let mut config = parser::read_config(&self.config_path).map_err(|e| McpError {
-            code: ErrorCode::INTERNAL_ERROR,
-            message: format!("Failed to read config: {}", e).into(),
-            data: None,
-        })?;
+        let tree = self.read_tree()?;
 
-        let all_values = config.get_all(&params.option);
-        if all_values.is_empty() {
+        // Find all values across the tree
+        let all_annotated = tree.get_all(&params.option);
+        if all_annotated.is_empty() {
             return Ok(CallToolResult::error(vec![Content::text(format!(
-                "Option '{}' is not set in the config file.",
+                "Option '{}' is not set in any config file.",
                 params.option
             ))]));
         }
 
+        // Collect unique files that contain this option
+        let mut files_with_option: Vec<String> = Vec::new();
+        for av in &all_annotated {
+            if !files_with_option.contains(&av.source_file) {
+                files_with_option.push(av.source_file.clone());
+            }
+        }
+
         let output = if let Some(ref value) = params.value {
-            let found = writer::comment_option_value(&mut config, &params.option, value);
+            // Remove a specific value -- find the file that contains it
+            let mut found = false;
+            let mut target_file = String::new();
+            for file_path in &files_with_option {
+                let mut config = parser::read_config(file_path).map_err(|e| McpError {
+                    code: ErrorCode::INTERNAL_ERROR,
+                    message: format!("Failed to read config: {}", e).into(),
+                    data: None,
+                })?;
+                if writer::comment_option_value(&mut config, &params.option, value) {
+                    writer::write_config(&config).map_err(|e| McpError {
+                        code: ErrorCode::INTERNAL_ERROR,
+                        message: format!("Failed to write config: {}", e).into(),
+                        data: None,
+                    })?;
+                    found = true;
+                    target_file = file_path.clone();
+                    break;
+                }
+            }
             if !found {
                 return Ok(CallToolResult::error(vec![Content::text(format!(
-                    "No entry `{} = {}` found in config file.\n\nCurrent values:\n{}",
+                    "No entry `{} = {}` found in config files.\n\nCurrent values:\n{}",
                     params.option,
                     value,
-                    all_values
+                    all_annotated
                         .iter()
-                        .map(|v| format!("  {} = {}", params.option, v))
+                        .map(|av| format!(
+                            "  {} = {} ({})",
+                            params.option,
+                            av.value,
+                            Self::short_path(&av.source_file)
+                        ))
                         .collect::<Vec<_>>()
                         .join("\n")
                 ))]));
             }
-            let remaining = config.get_all(&params.option).len();
+            // Re-read tree to get accurate count after the write
+            let updated_tree = self.read_tree()?;
+            let remaining = updated_tree.get_all(&params.option).len();
+            let file_label = if target_file != self.config_path {
+                format!(" from {}", Self::short_path(&target_file))
+            } else {
+                String::new()
+            };
             format!(
-                "Removed `{} = {}`\n({} entries remaining)\n",
-                params.option, value, remaining
+                "Removed `{} = {}`{}\n({} entries remaining)\n",
+                params.option, value, file_label, remaining
             )
         } else {
-            let count = all_values.len();
-            let found = writer::comment_option(&mut config, &params.option);
-            if !found {
-                return Ok(CallToolResult::error(vec![Content::text(format!(
-                    "Option '{}' was not found in config file.",
-                    params.option
-                ))]));
+            // Remove all occurrences across all files
+            let count = all_annotated.len();
+            let mut modified_files = Vec::new();
+            for file_path in &files_with_option {
+                let mut config = parser::read_config(file_path).map_err(|e| McpError {
+                    code: ErrorCode::INTERNAL_ERROR,
+                    message: format!("Failed to read config: {}", e).into(),
+                    data: None,
+                })?;
+                if writer::comment_option(&mut config, &params.option) {
+                    writer::write_config(&config).map_err(|e| McpError {
+                        code: ErrorCode::INTERNAL_ERROR,
+                        message: format!("Failed to write config: {}", e).into(),
+                        data: None,
+                    })?;
+                    modified_files.push(file_path.clone());
+                }
             }
             let mut out = format!("Removed all {} entries for `{}`\n", count, params.option);
+            if modified_files.len() > 1 {
+                out.push_str(&format!(
+                    "Modified files: {}\n",
+                    modified_files
+                        .iter()
+                        .map(|f| Self::short_path(f))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                ));
+            }
             if let Some(opt) = self.options.iter().find(|o| o.name == params.option) {
                 let default = if opt.default_value.is_empty() {
                     "(unset)".to_string()
@@ -463,12 +620,6 @@ impl GhosttyServer {
             out
         };
 
-        writer::write_config(&config).map_err(|e| McpError {
-            code: ErrorCode::INTERNAL_ERROR,
-            message: format!("Failed to write config: {}", e).into(),
-            data: None,
-        })?;
-
         let mut output = output;
         output.push_str("\nReload config in Ghostty to apply changes.");
 
@@ -476,7 +627,7 @@ impl GhosttyServer {
     }
 
     #[tool(
-        description = "Validate the Ghostty configuration. Without parameters, validates the entire config file for errors (unknown options, invalid values, type mismatches). With 'option' and 'value', validates a specific value before setting it."
+        description = "Validate the Ghostty configuration. Without parameters, validates the entire config (including all included files) for errors (unknown options, invalid values, type mismatches). With 'option' and 'value', validates a specific value before setting it."
     )]
     async fn validate_config(
         &self,
@@ -516,34 +667,73 @@ impl GhosttyServer {
                 }
             }
             _ => {
-                let config = parser::read_config(&self.config_path).map_err(|e| McpError {
-                    code: ErrorCode::INTERNAL_ERROR,
-                    message: format!("Failed to read config: {}", e).into(),
-                    data: None,
-                })?;
+                let tree = self.read_tree()?;
+                let annotated_map = tree.to_annotated_map();
 
-                let map = config.to_map();
-
-                if map.is_empty() {
+                if annotated_map.is_empty() {
                     return Ok(CallToolResult::success(vec![Content::text(
-                        "Config file is empty. No validation issues.",
+                        "Config is empty. No validation issues.",
                     )]));
                 }
 
-                let issues = validator::validate_config(&map, &self.options);
+                // Build a flat map for validation (merging all files)
+                // Skip config-file: it's a meta-directive, not a config option
+                let mut flat_map: std::collections::BTreeMap<String, Vec<String>> =
+                    std::collections::BTreeMap::new();
+                for (key, avs) in &annotated_map {
+                    if key == "config-file" {
+                        continue;
+                    }
+                    for av in avs {
+                        flat_map
+                            .entry(key.clone())
+                            .or_default()
+                            .push(av.value.clone());
+                    }
+                }
+
+                let issues = validator::validate_config(&flat_map, &self.options);
+                let has_includes = !tree.includes.is_empty();
 
                 if issues.is_empty() {
+                    let file_note = if has_includes {
+                        let file_count =
+                            1 + tree.includes.iter().filter(|i| i.config.is_some()).count();
+                        format!(" across {} files", file_count)
+                    } else {
+                        String::new()
+                    };
                     Ok(CallToolResult::success(vec![Content::text(format!(
-                        "Config is valid. {} options set, no issues found.",
-                        map.len()
+                        "Config is valid. {} options set{}, no issues found.",
+                        flat_map.len(),
+                        file_note
                     ))]))
                 } else {
                     let mut output = format!(
                         "Found {} issues in config ({} options set):\n\n",
                         issues.len(),
-                        map.len()
+                        flat_map.len()
                     );
                     for issue in &issues {
+                        // Annotate with source file if modular
+                        if has_includes {
+                            if let Some(avs) = annotated_map.get(&issue.option) {
+                                let sources: Vec<String> = avs
+                                    .iter()
+                                    .map(|av| Self::short_path(&av.source_file))
+                                    .collect::<std::collections::HashSet<_>>()
+                                    .into_iter()
+                                    .collect();
+                                output.push_str(&format!(
+                                    "[{}] {} ({}): {}\n",
+                                    issue.level,
+                                    issue.option,
+                                    sources.join(", "),
+                                    issue.message
+                                ));
+                                continue;
+                            }
+                        }
                         output.push_str(&format!(
                             "[{}] {}: {}\n",
                             issue.level, issue.option, issue.message
@@ -554,9 +744,136 @@ impl GhosttyServer {
             }
         }
     }
+
+    #[tool(
+        description = "List all configuration files in the Ghostty config hierarchy. Shows the primary config file and all included files with their status (loaded/missing/optional), option count, and include source."
+    )]
+    async fn list_config_files(&self) -> Result<CallToolResult, McpError> {
+        let tree = self.read_tree()?;
+
+        let primary_count = tree.primary.to_map().len();
+        let mut output = format!(
+            "# Ghostty Config Files\n\n**Primary:** {}\n  {} options set\n\n",
+            self.config_path, primary_count
+        );
+
+        if tree.includes.is_empty() {
+            output.push_str("No included config files.\n\nUse `create_config_module` to split your config into modular files (keybinds, fonts, theme).");
+        } else {
+            output.push_str(&format!(
+                "**Includes:** ({} files)\n\n",
+                tree.includes.len()
+            ));
+            for inc in &tree.includes {
+                let status = if let Some(ref config) = inc.config {
+                    let count = config.to_map().len();
+                    format!("loaded, {} options", count)
+                } else if inc.optional {
+                    "optional, not found".to_string()
+                } else {
+                    "missing".to_string()
+                };
+
+                let optional_marker = if inc.optional { " (optional)" } else { "" };
+                let included_from = if inc.included_from != self.config_path {
+                    format!(" (included from {})", Self::short_path(&inc.included_from))
+                } else {
+                    String::new()
+                };
+
+                output.push_str(&format!(
+                    "- **{}** (`config-file = {}`){}: {}{}\n",
+                    Self::short_path(&inc.resolved_path),
+                    inc.directive,
+                    optional_marker,
+                    status,
+                    included_from,
+                ));
+            }
+        }
+
+        Ok(CallToolResult::success(vec![Content::text(output)]))
+    }
+
+    #[tool(
+        description = "Create a new modular config file and add it as an include in the primary Ghostty config. Known module names: 'keybinds' (keybind options), 'fonts' (font options), 'theme' (appearance and color options). Custom names are also allowed. After creation, write_config will automatically route matching options to the module file."
+    )]
+    async fn create_config_module(
+        &self,
+        params: Parameters<CreateConfigModuleParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let params = params.0;
+
+        // Check if already included
+        let tree = self.read_tree()?;
+        for inc in &tree.includes {
+            let file_name = Path::new(&inc.resolved_path)
+                .file_name()
+                .unwrap_or_default()
+                .to_string_lossy();
+            if file_name == params.name {
+                return Ok(CallToolResult::error(vec![Content::text(format!(
+                    "Module '{}' is already included in the config.",
+                    params.name
+                ))]));
+            }
+        }
+
+        let mut primary = parser::read_config(&self.config_path).map_err(|e| McpError {
+            code: ErrorCode::INTERNAL_ERROR,
+            message: format!("Failed to read config: {}", e).into(),
+            data: None,
+        })?;
+
+        let module_path = writer::create_module_file(&mut primary, &params.name, &self.config_dir)
+            .map_err(|e| McpError {
+                code: ErrorCode::INTERNAL_ERROR,
+                message: format!("Failed to create module: {}", e).into(),
+                data: None,
+            })?;
+
+        let categories = modules::categories_for_module(&params.name);
+        let mut output = format!(
+            "Created config module: {}\n\nFile: {}\nDirective added: `config-file = {}`\n",
+            params.name, module_path, params.name
+        );
+
+        if !categories.is_empty() {
+            output.push_str(&format!(
+                "\nOptions in these categories will auto-route to this file:\n{}\n",
+                categories
+                    .iter()
+                    .map(|c| format!("- {}", c))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            ));
+        }
+
+        output.push_str("\nReload config in Ghostty (Cmd+Shift+, on macOS) to apply changes.");
+
+        Ok(CallToolResult::success(vec![Content::text(output)]))
+    }
 }
 
 impl GhosttyServer {
+    /// Read the full config tree (primary + includes). Re-reads on every call.
+    fn read_tree(&self) -> Result<parser::ConfigTree, McpError> {
+        parser::read_config_tree(&self.config_path).map_err(|e| McpError {
+            code: ErrorCode::INTERNAL_ERROR,
+            message: format!("Failed to read config tree: {}", e).into(),
+            data: None,
+        })
+    }
+
+    /// Extract a short display name from a file path (just the filename).
+    fn short_path(path: &str) -> String {
+        Path::new(path)
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string()
+    }
+
     fn build_instructions(&self) -> String {
         // Count options per category
         let mut counts: std::collections::HashMap<&str, usize> = std::collections::HashMap::new();
@@ -583,6 +900,7 @@ impl GhosttyServer {
             - Audit: read_config -> validate_config -> fix issues with write_config\n\
             - Remove: read_config(option=X) to check current value -> remove_config to comment it out\n\
             - Remove specific: For repeatable options, use remove_config with 'value' to remove one entry\n\
+            - Modular: list_config_files -> create_config_module -> write_config (auto-routes to modules)\n\
             \n\
             SEARCH TIPS\n\
             search_config supports conceptual/natural-language queries, not just exact names.\n\
@@ -698,6 +1016,7 @@ mod tests {
         let server = GhosttyServer::new();
         assert!(!server.options.is_empty());
         assert!(!server.config_path.is_empty());
+        assert!(!server.config_dir.is_empty());
     }
 
     #[test]
@@ -737,6 +1056,11 @@ mod tests {
 
         // Should contain reload note
         assert!(instructions.contains("CONFIG RELOAD"));
+
+        // Should contain modular workflow
+        assert!(instructions.contains("Modular"));
+        assert!(instructions.contains("list_config_files"));
+        assert!(instructions.contains("create_config_module"));
     }
 
     // --- MCP tool handler tests -------------------------------------------
