@@ -177,7 +177,10 @@ jobs:
           git checkout -b "$BRANCH"
           git add data/ghostty-options.json data/ghostty-docs-raw.txt data/ghostty-version.txt
           git commit -m "chore: update ghostty docs to v${LATEST}"
-          git push origin "$BRANCH"
+          # auto/* branches are bot-owned; force-push so a stale branch left
+          # by an earlier failed run (pushed but never opened a PR) cannot
+          # wedge the workflow.
+          git push --force origin "$BRANCH"
 
           gh label create automated --description "Automated PR" --color "0E8A16" 2>/dev/null || true
           gh pr create \
