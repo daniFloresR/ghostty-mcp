@@ -1,6 +1,6 @@
 use nucleo_matcher::{
-    Config, Matcher,
     pattern::{CaseMatching, Normalization, Pattern},
+    Config, Matcher,
 };
 
 use crate::data::options::GhosttyOption;
@@ -55,10 +55,12 @@ pub fn search_options(
             let haystack: Vec<char> = search_text.chars().collect();
             let haystack_str = nucleo_matcher::Utf32Str::Unicode(&haystack);
 
-            pattern.score(haystack_str, &mut matcher).map(|score| SearchResult {
-                option: option.clone(),
-                score,
-            })
+            pattern
+                .score(haystack_str, &mut matcher)
+                .map(|score| SearchResult {
+                    option: option.clone(),
+                    score,
+                })
         })
         .collect();
 
@@ -177,7 +179,10 @@ mod tests {
         assert!(
             results.windows(2).all(|w| w[0].score >= w[1].score),
             "results must be sorted by score descending: {:?}",
-            results.iter().map(|r| (&r.option.name, r.score)).collect::<Vec<_>>()
+            results
+                .iter()
+                .map(|r| (&r.option.name, r.score))
+                .collect::<Vec<_>>()
         );
     }
 }

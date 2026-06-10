@@ -1,9 +1,7 @@
 use rmcp::{
     handler::server::{tool::ToolRouter, wrapper::Parameters},
     model::*,
-    tool, tool_handler, tool_router,
-    ErrorData as McpError,
-    ServerHandler,
+    tool, tool_handler, tool_router, ErrorData as McpError, ServerHandler,
 };
 
 use crate::config::{parser, validator, writer};
@@ -67,18 +65,16 @@ impl GhosttyServer {
         }
     }
 
-    #[tool(description = "Search Ghostty configuration options using fuzzy matching. Returns top matching options with name, short description, default value, and category. Use this to find options by concept (e.g. 'transparent', 'font size', 'padding').")]
+    #[tool(
+        description = "Search Ghostty configuration options using fuzzy matching. Returns top matching options with name, short description, default value, and category. Use this to find options by concept (e.g. 'transparent', 'font size', 'padding')."
+    )]
     async fn search_config(
         &self,
         params: Parameters<SearchConfigParams>,
     ) -> Result<CallToolResult, McpError> {
         let params = params.0;
-        let results = search::search_options(
-            &self.options,
-            &params.query,
-            params.category.as_deref(),
-            10,
-        );
+        let results =
+            search::search_options(&self.options, &params.query, params.category.as_deref(), 10);
 
         if results.is_empty() {
             return Ok(CallToolResult::success(vec![Content::text(format!(
@@ -122,7 +118,9 @@ impl GhosttyServer {
         Ok(CallToolResult::success(vec![Content::text(output)]))
     }
 
-    #[tool(description = "Get complete documentation for a specific Ghostty configuration option by exact name. Returns full description, type, default value, valid values, platform notes, and related options.")]
+    #[tool(
+        description = "Get complete documentation for a specific Ghostty configuration option by exact name. Returns full description, type, default value, valid values, platform notes, and related options."
+    )]
     async fn get_option(
         &self,
         params: Parameters<GetOptionParams>,
@@ -164,10 +162,7 @@ impl GhosttyServer {
                 output.push_str(&format!("\n## Description\n\n{}\n", opt.description));
 
                 if let Some(ref related) = opt.related_options {
-                    output.push_str(&format!(
-                        "\n## Related Options\n\n{}\n",
-                        related.join(", ")
-                    ));
+                    output.push_str(&format!("\n## Related Options\n\n{}\n", related.join(", ")));
                 }
 
                 Ok(CallToolResult::success(vec![Content::text(output)]))
@@ -186,7 +181,9 @@ impl GhosttyServer {
         }
     }
 
-    #[tool(description = "List all Ghostty configuration categories with descriptions and option counts. Use this to browse options by category.")]
+    #[tool(
+        description = "List all Ghostty configuration categories with descriptions and option counts. Use this to browse options by category."
+    )]
     async fn list_categories(&self) -> Result<CallToolResult, McpError> {
         let cat_descs = options::category_descriptions();
 
@@ -204,10 +201,7 @@ impl GhosttyServer {
 
         for (name, desc) in &cat_descs {
             if let Some(count) = counts.get(*name) {
-                output.push_str(&format!(
-                    "- **{}** ({} options): {}\n",
-                    name, count, desc
-                ));
+                output.push_str(&format!("- **{}** ({} options): {}\n", name, count, desc));
             }
         }
 
@@ -224,7 +218,9 @@ impl GhosttyServer {
         Ok(CallToolResult::success(vec![Content::text(output)]))
     }
 
-    #[tool(description = "Read the current Ghostty configuration. If 'option' is specified, returns just that option's value. If omitted, returns all set options. Shows both the current value and default.")]
+    #[tool(
+        description = "Read the current Ghostty configuration. If 'option' is specified, returns just that option's value. If omitted, returns all set options. Shows both the current value and default."
+    )]
     async fn read_config(
         &self,
         params: Parameters<ReadConfigParams>,
@@ -300,7 +296,9 @@ impl GhosttyServer {
         }
     }
 
-    #[tool(description = "Set a Ghostty configuration option. For repeatable options (keybind, palette, etc.), appends a new entry instead of overwriting. For non-repeatable options, updates the existing value or adds it. The value is validated before writing. Changes take effect on config reload (Cmd+Shift+, on macOS).")]
+    #[tool(
+        description = "Set a Ghostty configuration option. For repeatable options (keybind, palette, etc.), appends a new entry instead of overwriting. For non-repeatable options, updates the existing value or adds it. The value is validated before writing. Changes take effect on config reload (Cmd+Shift+, on macOS)."
+    )]
     async fn write_config(
         &self,
         params: Parameters<WriteConfigParams>,
@@ -387,7 +385,9 @@ impl GhosttyServer {
         Ok(CallToolResult::success(vec![Content::text(output)]))
     }
 
-    #[tool(description = "Remove a Ghostty configuration option by commenting it out. For repeatable options (keybind, palette, etc.), provide 'value' to remove a specific entry; omit 'value' to remove all entries. The line is preserved as a comment for reference.")]
+    #[tool(
+        description = "Remove a Ghostty configuration option by commenting it out. For repeatable options (keybind, palette, etc.), provide 'value' to remove a specific entry; omit 'value' to remove all entries. The line is preserved as a comment for reference."
+    )]
     async fn remove_config(
         &self,
         params: Parameters<RemoveConfigParams>,
@@ -459,7 +459,9 @@ impl GhosttyServer {
         Ok(CallToolResult::success(vec![Content::text(output)]))
     }
 
-    #[tool(description = "Validate the Ghostty configuration. Without parameters, validates the entire config file for errors (unknown options, invalid values, type mismatches). With 'option' and 'value', validates a specific value before setting it.")]
+    #[tool(
+        description = "Validate the Ghostty configuration. Without parameters, validates the entire config file for errors (unknown options, invalid values, type mismatches). With 'option' and 'value', validates a specific value before setting it."
+    )]
     async fn validate_config(
         &self,
         params: Parameters<ValidateConfigParams>,
@@ -541,8 +543,7 @@ impl GhosttyServer {
 impl GhosttyServer {
     fn build_instructions(&self) -> String {
         // Count options per category
-        let mut counts: std::collections::HashMap<&str, usize> =
-            std::collections::HashMap::new();
+        let mut counts: std::collections::HashMap<&str, usize> = std::collections::HashMap::new();
         for opt in &self.options {
             *counts.entry(&opt.category).or_insert(0) += 1;
         }

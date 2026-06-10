@@ -26,26 +26,50 @@ pub fn load_options() -> Vec<GhosttyOption> {
 /// Get category descriptions.
 pub fn category_descriptions() -> Vec<(&'static str, &'static str)> {
     vec![
-        ("font", "Font family, size, style, metrics, and rendering options"),
-        ("window", "Window appearance, padding, decorations, tabs, and splits"),
-        ("appearance", "Theme, colors, opacity, contrast, and visual effects"),
+        (
+            "font",
+            "Font family, size, style, metrics, and rendering options",
+        ),
+        (
+            "window",
+            "Window appearance, padding, decorations, tabs, and splits",
+        ),
+        (
+            "appearance",
+            "Theme, colors, opacity, contrast, and visual effects",
+        ),
         ("cursor", "Cursor style, color, blinking, and behavior"),
-        ("mouse", "Mouse behavior, hide-while-typing, scroll settings"),
+        (
+            "mouse",
+            "Mouse behavior, hide-while-typing, scroll settings",
+        ),
         ("color", "Color palette, bold/faint colors"),
         ("selection", "Text selection behavior and colors"),
         ("clipboard", "Clipboard read/write permissions and behavior"),
         ("keybind", "Keyboard shortcuts and key bindings"),
-        ("shell", "Shell command, working directory, and shell behavior"),
-        ("shell-integration", "Shell integration features and prompt detection"),
+        (
+            "shell",
+            "Shell command, working directory, and shell behavior",
+        ),
+        (
+            "shell-integration",
+            "Shell integration features and prompt detection",
+        ),
         ("scrollback", "Scrollback buffer size and behavior"),
         ("link", "Clickable URL detection and behavior"),
-        ("macos", "macOS-specific options (titlebar, option-as-alt, etc.)"),
+        (
+            "macos",
+            "macOS-specific options (titlebar, option-as-alt, etc.)",
+        ),
         ("linux", "Linux-specific options"),
         ("gtk", "GTK-specific options (Linux)"),
         ("x11", "X11-specific options (Linux)"),
         ("quick-terminal", "Quick terminal dropdown settings"),
         ("shader", "Custom GLSL shader effects"),
-        ("compatibility", "Terminal compatibility settings (TERM, OSC, etc.)"),
+        (
+            "compatibility",
+            "Terminal compatibility settings (TERM, OSC, etc.)",
+        ),
         ("image", "Image rendering and storage settings"),
         ("general", "General application settings"),
     ]
@@ -66,8 +90,16 @@ mod tests {
         let options = load_options();
         for opt in &options {
             assert!(!opt.name.is_empty(), "Option name should not be empty");
-            assert!(!opt.category.is_empty(), "Option {} should have a category", opt.name);
-            assert!(!opt.option_type.is_empty(), "Option {} should have a type", opt.name);
+            assert!(
+                !opt.category.is_empty(),
+                "Option {} should have a category",
+                opt.name
+            );
+            assert!(
+                !opt.option_type.is_empty(),
+                "Option {} should have a type",
+                opt.name
+            );
         }
     }
 

@@ -157,7 +157,11 @@ mod tests {
     use super::*;
     use crate::data::options::GhosttyOption;
 
-    fn make_option(name: &str, option_type: &str, valid_values: Option<Vec<&str>>) -> GhosttyOption {
+    fn make_option(
+        name: &str,
+        option_type: &str,
+        valid_values: Option<Vec<&str>>,
+    ) -> GhosttyOption {
         GhosttyOption {
             name: name.to_string(),
             description: String::new(),
@@ -278,7 +282,10 @@ mod tests {
     fn validate_config_repeated_non_repeatable() {
         let options = vec![make_option("font-size", "number", None)];
         let mut map = std::collections::BTreeMap::new();
-        map.insert("font-size".to_string(), vec!["14".to_string(), "16".to_string()]);
+        map.insert(
+            "font-size".to_string(),
+            vec!["14".to_string(), "16".to_string()],
+        );
         let issues = validate_config(&map, &options);
         assert!(issues.iter().any(|i| i.message.contains("not repeatable")));
     }
