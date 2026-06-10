@@ -1,0 +1,7 @@
+# Pin the toolchain so local dev, CI, and the docs-update cron all lint and
+# build with the same Rust version. New stable releases ship new clippy lints
+# that break `-D warnings` on unchanged code; bump this deliberately in a
+# dedicated PR instead of letting CI float to whatever is latest.
+[toolchain]
+channel = "1.96.0"
+components = ["clippy", "rustfmt"]

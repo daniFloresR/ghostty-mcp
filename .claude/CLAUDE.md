@@ -26,14 +26,15 @@
 ## Constraints
 - Docker image must stay under 10MB.
 - `cargo clippy -- -D warnings` must pass with zero warnings.
-- CI runs clippy, tests, and docker size check on every push/PR.
+- CI runs fmt, clippy, tests, and docker size check on every push/PR.
+- The Rust toolchain is pinned in `rust-toolchain.toml` (keep the Dockerfile base image tag in sync). Bump it deliberately in a dedicated PR; never float on latest stable.
 
 ## Testing
 - `cargo test` for unit/integration tests.
+- The project follows strict TDD: write failing tests first, then the minimal code to pass them.
 - CI workflow: `.github/workflows/ci.yml`.
 
 ## Release Flow
 - Use `/release patch|minor|major` to create a release PR.
-- Merging a `release/v*` PR to main auto-creates the git tag (`auto-tag.yml`).
-- The tag push triggers Docker build + push to GHCR (`release.yml`).
+- Merging a `release/v*` PR to main triggers `release.yml`, which creates the git tag, the GitHub Release, and builds + pushes the Docker image to GHCR in a single job.
 - Never push tags manually -- let the automation handle it.

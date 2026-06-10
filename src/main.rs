@@ -4,7 +4,7 @@ mod search;
 mod server;
 mod tools;
 
-use rmcp::{ServiceExt, transport::stdio};
+use rmcp::{transport::stdio, ServiceExt};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

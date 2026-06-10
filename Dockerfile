@@ -1,12 +1,14 @@
 # Stage 1: Build static binary
-FROM rust:1-alpine AS builder
+# Keep this tag in sync with rust-toolchain.toml (the toml is not copied into
+# the build context; the image tag is the pin inside Docker).
+FROM rust:1.96-alpine AS builder
 RUN apk add --no-cache musl-dev
 WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY src/ src/
 COPY data/ data/
 COPY scripts/ scripts/
-RUN cargo build --release
+RUN cargo build --release --locked
 
 # Stage 2: Minimal runtime
 FROM scratch

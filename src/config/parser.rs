@@ -72,15 +72,11 @@ impl ConfigFile {
 
     /// Get the value of a specific option. Returns the last set value.
     pub fn get(&self, option: &str) -> Option<String> {
-        self.lines
-            .iter()
-            .rev()
-            .find_map(|line| match line {
-                ConfigLine::KeyValue { key, value } if key == option => Some(value.clone()),
-                _ => None,
-            })
+        self.lines.iter().rev().find_map(|line| match line {
+            ConfigLine::KeyValue { key, value } if key == option => Some(value.clone()),
+            _ => None,
+        })
     }
-
 }
 
 impl std::fmt::Display for ConfigFile {
@@ -162,11 +158,17 @@ mod tests {
 
     #[test]
     fn parse_repeated_keys() {
-        let config = ConfigFile::parse("font-family = Fira Code\nfont-family = JetBrains Mono", "/test");
+        let config = ConfigFile::parse(
+            "font-family = Fira Code\nfont-family = JetBrains Mono",
+            "/test",
+        );
         let map = config.to_map();
         assert_eq!(map["font-family"].len(), 2);
         // get() returns the last value
-        assert_eq!(config.get("font-family"), Some("JetBrains Mono".to_string()));
+        assert_eq!(
+            config.get("font-family"),
+            Some("JetBrains Mono".to_string())
+        );
     }
 
     #[test]
@@ -186,8 +188,10 @@ mod tests {
 
     #[test]
     fn get_all_returns_all_values() {
-        let config =
-            ConfigFile::parse("keybind = ctrl+a=new_tab\nkeybind = ctrl+b=new_window\n", "/test");
+        let config = ConfigFile::parse(
+            "keybind = ctrl+a=new_tab\nkeybind = ctrl+b=new_window\n",
+            "/test",
+        );
         let all = config.get_all("keybind");
         assert_eq!(all.len(), 2);
         assert_eq!(all[0], "ctrl+a=new_tab");
