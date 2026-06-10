@@ -118,6 +118,51 @@ pub fn write_config(config: &ConfigFile) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Create a new module file and add a `config-file` directive to the primary config.
+///
+/// Returns the path to the newly created module file.
+pub fn create_module_file(
+    primary: &mut ConfigFile,
+    module_name: &str,
+    config_dir: &str,
+) -> anyhow::Result<String> {
+    // Validate module name: no path separators or dots
+    if module_name.contains('/')
+        || module_name.contains('\\')
+        || module_name.contains('.')
+        || module_name.is_empty()
+    {
+        return Err(anyhow::anyhow!(
+            "Invalid module name '{}'. Must not contain '/', '\\', or '.'",
+            module_name
+        ));
+    }
+
+    let module_path = format!("{}/{}", config_dir, module_name);
+
+    // Check if file already exists
+    if std::path::Path::new(&module_path).exists() {
+        return Err(anyhow::anyhow!(
+            "Module file already exists: {}",
+            module_path
+        ));
+    }
+
+    // Create the module file with a header comment
+    std::fs::write(
+        &module_path,
+        format!("# Ghostty {} configuration\n", module_name),
+    )?;
+
+    // Add config-file directive to primary config
+    append_option(primary, "config-file", module_name);
+
+    // Write the updated primary config
+    write_config(primary)?;
+
+    Ok(module_path)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -297,5 +342,89 @@ mod tests {
         write_config(&config).unwrap();
         let contents = std::fs::read_to_string(&path).unwrap();
         assert!(contents.contains("font-size = 14"));
+    }
+
+    #[test]
+    fn create_module_file_creates_file_with_header() {
+        let dir = tempfile::tempdir().unwrap();
+        let primary_path = dir.path().join("config");
+        std::fs::write(&primary_path, "font-size = 14\n").unwrap();
+        let mut primary = ConfigFile::parse(
+            &std::fs::read_to_string(&primary_path).unwrap(),
+            primary_path.to_str().unwrap(),
+        );
+
+        let result = create_module_file(&mut primary, "keybinds", dir.path().to_str().unwrap());
+        assert!(result.is_ok());
+
+        let module_path = result.unwrap();
+        let contents = std::fs::read_to_string(&module_path).unwrap();
+        assert!(contents.contains("# Ghostty keybinds configuration"));
+    }
+
+    #[test]
+    fn create_module_file_adds_directive_to_primary() {
+        let dir = tempfile::tempdir().unwrap();
+        let primary_path = dir.path().join("config");
+        std::fs::write(&primary_path, "font-size = 14\n").unwrap();
+        let mut primary = ConfigFile::parse(
+            &std::fs::read_to_string(&primary_path).unwrap(),
+            primary_path.to_str().unwrap(),
+        );
+
+        create_module_file(&mut primary, "keybinds", dir.path().to_str().unwrap()).unwrap();
+
+        // Re-read the primary config from disk
+        let updated = std::fs::read_to_string(&primary_path).unwrap();
+        assert!(updated.contains("config-file = keybinds"));
+    }
+
+    #[test]
+    fn create_module_file_rejects_duplicate() {
+        let dir = tempfile::tempdir().unwrap();
+        let primary_path = dir.path().join("config");
+        std::fs::write(&primary_path, "font-size = 14\n").unwrap();
+
+        // Create the module file first (simulate it already existing)
+        let module_path = dir.path().join("keybinds");
+        std::fs::write(&module_path, "# existing\n").unwrap();
+
+        let mut primary = ConfigFile::parse(
+            &std::fs::read_to_string(&primary_path).unwrap(),
+            primary_path.to_str().unwrap(),
+        );
+
+        let result = create_module_file(&mut primary, "keybinds", dir.path().to_str().unwrap());
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("already exists"));
+    }
+
+    #[test]
+    fn create_module_file_rejects_invalid_names() {
+        let dir = tempfile::tempdir().unwrap();
+        let primary_path = dir.path().join("config");
+        std::fs::write(&primary_path, "font-size = 14\n").unwrap();
+        let mut primary = ConfigFile::parse(
+            &std::fs::read_to_string(&primary_path).unwrap(),
+            primary_path.to_str().unwrap(),
+        );
+
+        // Slashes
+        assert!(
+            create_module_file(&mut primary, "sub/file", dir.path().to_str().unwrap()).is_err()
+        );
+
+        // Backslashes
+        assert!(
+            create_module_file(&mut primary, "sub\\file", dir.path().to_str().unwrap()).is_err()
+        );
+
+        // Dots
+        assert!(
+            create_module_file(&mut primary, "file.conf", dir.path().to_str().unwrap()).is_err()
+        );
+
+        // Empty
+        assert!(create_module_file(&mut primary, "", dir.path().to_str().unwrap()).is_err());
     }
 }
