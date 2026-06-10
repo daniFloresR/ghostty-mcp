@@ -609,21 +609,24 @@ impl GhosttyServer {
     }
 }
 
-#[tool_handler]
+// Since rmcp 1.4 the #[tool_handler] macro defaults to building a fresh
+// router per request (Self::tool_router()); point it at the field so the
+// router is still built once at construction time.
+#[tool_handler(router = self.tool_router)]
 impl ServerHandler for GhosttyServer {
     fn get_info(&self) -> ServerInfo {
-        ServerInfo {
-            protocol_version: ProtocolVersion::V_2024_11_05,
-            capabilities: ServerCapabilities::builder().enable_tools().build(),
-            // from_build_env() would report rmcp's own name/version because
-            // the env! macros expand inside the rmcp crate.
-            server_info: Implementation {
-                name: env!("CARGO_PKG_NAME").to_string(),
-                version: env!("CARGO_PKG_VERSION").to_string(),
-                ..Implementation::from_build_env()
-            },
-            instructions: Some(self.build_instructions()),
-        }
+        // ServerInfo and Implementation are #[non_exhaustive] since rmcp 1.0,
+        // so they are built through constructors instead of struct literals.
+        // Implementation::new is used rather than from_build_env() because the
+        // latter's env! macros expand inside the rmcp crate and would report
+        // rmcp's own name/version.
+        ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
+            .with_protocol_version(ProtocolVersion::V_2024_11_05)
+            .with_server_info(Implementation::new(
+                env!("CARGO_PKG_NAME"),
+                env!("CARGO_PKG_VERSION"),
+            ))
+            .with_instructions(self.build_instructions())
     }
 }
 
